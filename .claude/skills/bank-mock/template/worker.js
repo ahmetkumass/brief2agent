@@ -61,8 +61,21 @@ const TOOLS = {
   async close_call(c, b, l) { l.outcome = b.outcome; l.reason = b.reason || null; return { ok: true }; },
 };
 
+// All requests go through ONE Durable Object, so ledger writes are serialised (a KV read-modify-write lost
+// writes when the agent called two tools at once). The handler below sees env.LEDGER with get/put/delete.
+export class Bank {
+  constructor(state) { this.s = state.storage; }
+  async fetch(req) {
+    const s = this.s;
+    return handle(req, { LEDGER: { get: k => s.get(k), put: (k, v) => s.put(k, v), delete: k => s.delete(k) } });
+  }
+}
+
 export default {
-  async fetch(req, env) {
+  async fetch(req, env) { return env.BANK.get(env.BANK.idFromName("bank")).fetch(req); },
+};
+
+async function handle(req, env) {
     try {
       const url = new URL(req.url); const path = url.pathname.replace(/\/+$/, "");
       if (path === "" || path === "/" || path === BASE + "/health") return json({ ok: true, service: "bank mock" });
@@ -88,5 +101,4 @@ export default {
       await save(env, b.customer_id, l);
       return json(out, status);
     } catch (e) { return json({ ok: false, error: "internal error" }, 500); }
-  },
-};
+}

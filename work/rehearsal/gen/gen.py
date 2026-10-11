@@ -295,7 +295,7 @@ promise_tool = api_tool('create_promise',
     ["product_id", "amount", "payment_date"], None, PROMISE_POST)
 
 note_tool = api_tool('add_note',
-    'Arama notu ekle (kısa, Türkçe). Zorluk, itiraz, zaten ödedim ve iki kez başarısız söz kaydında kullan.',
+    'Arama notu ekle (kısa, Türkçe). TEK BAŞINA çağır (aynı anda başka araç çağırma), sonucunu bekle. Zorluk, itiraz, zaten ödedim ve iki kez başarısız söz kaydında kullan.',
     {"text": {"type": "string", "default": "{{note_text}}", "description": "Kısa not"}},
     ["text"], None,
     hook_head('''        if failed:
@@ -392,8 +392,8 @@ AKIŞ:
 6. create_promise sonrası what_to_do_next'e AYNEN uy. "Ödeme sözünüzü onaylayan bir SMS alacaksınız." cümlesi SADECE ok=true sonrası söylenir. Hata olursa müşteriye bir şey demeden bir kez tekrar dene; ikinci hata: dürüstçe kaydedilemediğini söyle, add_note, close_call(no_promise, system_error). "kaydedildi/kaydettim/alındı" sözcüklerini sadece ok=true sonrası kullan.
 
 ÖZEL DURUMLAR (hemen, ikna etmeden):
-- ZORLUK (işsizlik, işini kaybetme, hastalık, gelir yok vb.): empati kur ("Anlıyorum, geçmiş olsun."), ikna ETME, add_note (ör. "Müşteri işini kaybetti, ödeme güçlüğü"), sonra transfer_to_agent(reason=hardship), sonra "Size yardımcı olabilecek bir temsilciye aktarıyorum." + close_call(transferred, hardship).
-- İTİRAZ ("bu harcamayı ben yapmadım", "borcum yok"): tartışma, add_note (itirazı yaz), transfer_to_agent(reason=dispute), close_call(transferred, dispute).
+- ZORLUK (işsizlik, işini kaybetme, hastalık, gelir yok vb.): empati kur ("Anlıyorum, geçmiş olsun."), ikna ETME, add_note (ör. "Müşteri işini kaybetti, ödeme güçlüğü") TEK BAŞINA çağır ve sonucunu bekle, ANCAK ondan sonra transfer_to_agent(reason=hardship), sonra "Size yardımcı olabilecek bir temsilciye aktarıyorum." + close_call(transferred, hardship).
+- İTİRAZ ("bu harcamayı ben yapmadım", "borcum yok"): tartışma, add_note (itirazı yaz) tek başına, sonucu gelince transfer_to_agent(reason=dispute), close_call(transferred, dispute).
 - ZATEN ÖDEDİM: inanmaya/ikna etmeye çalışma, doğrulayamazsın. add_note (ör. "Müşteri ödediğini beyan etti"), sonra teşekkür, vedalaş, close_call(paid) (reason yok).
 - Müşteri kapatmak/konuşmak istemezse ve hiç söz yoksa: vedalaş, close_call(no_promise, customer_hangup). Söz varsa close_call(promise).
 - Robot musun: dijital asistan olduğunu söyle, devam et. Bilmediğin soru: o bilgiye sahip olmadığını söyle.
