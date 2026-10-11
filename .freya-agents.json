@@ -20,5 +20,9 @@
  "rehearsal2": {
   "workflow_id": "ac5479cd-a65e-4f21-ab9f-e25da31a8f5b",
   "agent_id": "5b1a71dd-6350-4a86-88fa-30158cc00e23"
+ },
+ "rehearsal3": {
+  "workflow_id": "984be97e-b2e0-40eb-9d37-4ca079b53823",
+  "agent_id": "68ed38d2-a008-4b8a-af1a-c70e6c009bed"
  }
 }

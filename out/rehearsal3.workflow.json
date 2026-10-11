@@ -1,0 +1,737 @@
+{
+ "initial_node": "setup",
+ "system_prompt": "Sen Anadolu Kart Bank'ın dijital asistanısın; telefonda konuşuyorsun. YALNIZCA TÜRKÇE konuş. Her turda bir-iki kısa cümle, tek soru. Müşteriye \"{{unvan}} {{soyad}}\" diye hitap et.\nHer araç sonucundan sonra what_to_do_next talimatını uygula ve hemen konuş ya da sıradaki aracı çağır; asla boş tur bırakma.\nBir araç ok=true dönmeden \"kaydedildi/planlandı/aktarıldı\" deme. Başarısız yazımda \"işleyemedim\" de.\nRobot / yapay zeka musun diye sorulursa: \"Ben Anadolu Kart Bank'ın dijital asistanıyım.\" de ve kaldığın yerden devam et (bu bir ret sayılmaz).\nDolandırıcılık şüphesi olursa: bankanın resmi numarasından arandığını, şifre veya kart bilgisi istemediğini söyle ve devam et.\nTarihleri doğal söyle (ör. \"21 Ekim Çarşamba\"), tutarları \"4.800 TL\" gibi. Tarih hesaplama; yalnızca verilen takvim/tablolara bak.\nMüşterinin son söylediği değer geçerlidir. Cevap yarım kaldıysa veya düzeltme içeriyorsa (\"pardon\", \"yani\", \"hayır\", \"şey\", \"yok yok\") araç çağırma, değeri tekrar sor.\nclose_call her zaman son araçtır: önce aynı turda vedalaş (teşekkür + iyi günler), sonra close_call çağır.",
+ "test_variables": {
+  "customer_id": "AK-1001",
+  "ad": "Mehmet",
+  "soyad": "Yılmaz",
+  "unvan": "Bay",
+  "now": "2026-10-14T11:00"
+ },
+ "tools": [],
+ "global_nodes": {},
+ "nodes": {
+  "setup": {
+   "name": "setup",
+   "node_type": "code",
+   "passthrough": true,
+   "passthrough_default_transition": "opening",
+   "on_enter": {
+    "type": "silent"
+   },
+   "disable_inactivity_monitor": true,
+   "pre_actions": [
+    {
+     "type": "function",
+     "function": {
+      "name": "code_exec",
+      "handler": "__function__:code_exec",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "code": {
+         "type": "string",
+         "default": "import datetime\ntry:\n    HOLIDAYS = dict()\n    HOLIDAYS['2026-10-29'] = 'Cumhuriyet Bayramı'\n    HOLIDAYS['2027-01-01'] = 'Yılbaşı'\n    NAMES = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar']\n    def is_bd(d):\n        return d.weekday() < 5 and d.isoformat() not in HOLIDAYS\n    def nth_bd_after(d, n):\n        c, k = d, 0\n        while k < n:\n            c = c + datetime.timedelta(days=1)\n            if is_bd(c): k += 1\n        return c\n    now = str(vars.get('now') or '')\n    today = datetime.date.fromisoformat(now[:10])\n    rows = []\n    for i in range(0, 46):\n        d = today + datetime.timedelta(days=i)\n        if is_bd(d): tag = 'iş günü'\n        elif d.isoformat() in HOLIDAYS: tag = 'RESMİ TATİL (' + HOLIDAYS[d.isoformat()] + ') - iş günü değil'\n        else: tag = 'hafta sonu - iş günü değil'\n        rows.append(d.isoformat() + ' ' + NAMES[d.weekday()] + ' - ' + tag)\n    t = now[11:16]\n    nb = nth_bd_after(today, 1)\n    cb = []\n    if is_bd(today) and t < '18:30':\n        cb.append('BUGÜN ' + today.isoformat() + ': ' + (t if t > '09:30' else '09:30') + ' sonrası ile 18:30 arası (18:30 dahil)')\n    else:\n        cb.append('Bugün geri arama yapılamaz (saat ' + t + ' veya iş günü değil).')\n    cb.append('SONRAKİ İŞ GÜNÜ ' + nb.isoformat() + ' ' + NAMES[nb.weekday()] + ': 09:30 ile 18:30 arası (ikisi de dahil)')\n    cb.append('Bunların dışındaki her gün/saat PENCERE DIŞI.')\n    vars['today'] = today.isoformat()\n    vars['now_time'] = t\n    vars['cb_text'] = '\\n'.join(cb)\n    vars['cal_text'] = 'Bugün ' + today.isoformat() + ' ' + NAMES[today.weekday()] + ', saat ' + t + '.\\nTakvim:\\n' + '\\n'.join(rows)\n    vars['setup_state'] = 'ok'\nexcept Exception as e:\n    vars['cal_text'] = 'Takvim yok'\n    vars['cb_text'] = 'Bilinmiyor'\n    vars['setup_state'] = 'error'\n"
+        },
+        "timeout_ms": {
+         "type": "number",
+         "default": 10000
+        }
+       }
+      }
+     }
+    }
+   ],
+   "transitions": [
+    {
+     "target_node": "opening",
+     "description": "always",
+     "condition": {
+      "operator": "always"
+     }
+    }
+   ]
+  },
+  "opening": {
+   "name": "opening",
+   "node_type": "conversation",
+   "interruptible": false,
+   "max_node_turns": 80,
+   "on_enter": {
+    "type": "tts",
+    "text": "Anadolu Kart Bank'tan arayan dijital asistanım, görüşme kayıt altına alınmaktadır. {{unvan}} {{soyad}} ile mi görüşüyorum?"
+   },
+   "task_message": "GÖREV: Doğru kişiye ulaşmak ve kimliği doğrulamak. Aramanın nedenini BİLMİYORSUN.\nYASAK SÖZCÜKLER (kimlik doğrulanana kadar, herkese): borç, ekstre, gecikme, tahsilat, kart, ödeme. Neden aradığın sorulursa: \"Güvenlik doğrulamasından sonra yalnızca {{unvan}} {{soyad}} ile görüşebileceğim bir konu.\" de.\nAçılış cümlesi ve \"{{unvan}} {{soyad}} ile mi görüşüyorum?\" sorusu zaten söylendi.\n\nA) KİŞİ TEYİDİ: Yalnızca \"evet\", \"benim\", \"buyurun benim\" veya kendi adını ({{ad}} / {{soyad}}) söylemesi onaydır. \"Alo\", \"buyurun\", \"kimsiniz\", \"efendim\" onay DEĞİLDİR: soruyu bir kez daha sor (\"{{unvan}} {{soyad}} ile mi görüşüyorum?\"). İkinci soruda da belirsizse: vedalaş ve close_call(not_reached, unclear).\nB) ÜÇÜNCÜ KİŞİ (eşi, annesi, iş arkadaşı vb. \"hayır, ben ...\"): aramanın nedenini söyleme. \"{{unvan}} {{soyad}}'a ne zaman ulaşabilirim?\" diye sor.\n   GERİ ARAMA PENCERESİ (yalnızca bunlar):\n{{cb_text}}\n   Söylenen günü takvimden YYYY-MM-DD'ye çevir (\"yarın\" = bugünden sonraki gün). Gün ve saat pencere içindeyse: gün ve saati tekrar et (\"Yarın 15 Ekim saat 12:00'de arayalım mı?\"), onay gelince schedule_callback çağır. Pencere dışıysa planlama: pencereyi söyleyip bir kez başka saat iste; yine dışıysa vedalaş ve close_call(not_reached, no_callback). Saat vermezse de bir kez sor; yine yoksa no_callback.\n   \"Yanlış numara\" / böyle biri yok: özür dile, vedalaş, close_call(not_reached, wrong_number).\n   Vefat: yalnızca \"Başınız sağolsun.\" de, başka şey sorma, close_call(not_reached, deceased).\nC) KİMLİK (kişi teyit edildikten sonra): önce \"Güvenliğiniz için doğum yılınızı söyler misiniz?\" -> cevabı verify_identity(field=birth_year). Doğruysa \"Posta kodunuzu söyler misiniz?\" -> verify_identity(field=postcode). Tek seferde bir soru. Her cevap için aracı çağır, kendin doğru/yanlış karar verme. Yanlışta aynı soruyu tekrar sor. Kimlik tamamlanınca kısa \"Teşekkür ederim.\" de. 3 yanlışta (araç söyler): hesap hakkında hiçbir şey söylemeden vedalaş ve close_call(not_verified, failed_identity).\n   Müşteri cevap vermek istemezse bir kez nedenini açıkla (güvenliği için); yine istemezse vedalaş, close_call(not_reached, unclear).\nMüşteri konuşmak istemez/kapatmak isterse (kimlik öncesi): vedalaş ve close_call(not_reached, unclear).",
+   "tools": [
+    {
+     "type": "function",
+     "config": {
+      "timeoutMs": 12000,
+      "maxRetries": 0
+     },
+     "function": {
+      "name": "verify_identity",
+      "handler": "__function__:api_call",
+      "description": "Müşteri bir güvenlik sorusunu her cevapladığında, o tek cevapla çağır.",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "url": {
+         "type": "string",
+         "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/verify_identity"
+        },
+        "method": {
+         "type": "string",
+         "default": "POST"
+        },
+        "headers": {
+         "type": "object",
+         "properties": {
+          "Content-Type": {
+           "type": "string",
+           "default": "application/json"
+          }
+         }
+        },
+        "body": {
+         "type": "object",
+         "properties": {
+          "customer_id": {
+           "type": "string",
+           "default": "{{customer_id}}"
+          },
+          "field": {
+           "type": "string",
+           "enum": [
+            "birth_year",
+            "postcode"
+           ],
+           "default": "{{field}}",
+           "description": "birth_year = doğum yılı, postcode = posta kodu."
+          },
+          "answer": {
+           "type": "string",
+           "default": "{{answer}}",
+           "description": "Rakamlarla: doğum yılı 4 hane (bin dokuz yüz seksen beş -> 1985), posta kodu 5 hane (otuz dört yedi yüz on -> 34710)."
+          }
+         },
+         "required": [
+          "field",
+          "answer"
+         ]
+        }
+       }
+      }
+     },
+     "pre_process_code": "try:\n    import re\n    b = config.get('body')\n    if isinstance(b, dict):\n        a = re.sub('[^0-9]', '', str(b.get('answer') or ''))\n        f = str(b.get('field') or '')\n        if f == 'birth_year' and len(a) == 2:\n            a = ('19' + a) if int(a) > 26 else ('20' + a)\n        if f == 'postcode' and len(a) == 4:\n            a = '0' + a\n        b['answer'] = a if a else str(b.get('answer') or '')\nexcept Exception:\n    pass\n",
+     "post_process_code": "try:\n    if isinstance(result, dict):\n        result.pop('header', None)\n        d = result.get('data')\n        if not isinstance(d, dict):\n            d = dict()\n            result['data'] = d\n        failed = d.get('ok') is False or int(result.get('status_code', 200) or 200) >= 500 or result.get('status') not in (None, 'success')\n        if failed and str(d.get('error') or '') == 'call_closed':\n            d['what_to_do_next'] = 'Arama sistemde kapalı. Vedalaş ve close_call çağır.'\n        elif failed:\n            d['what_to_do_next'] = 'Cevap işlenemedi (yanlış sayılmadı). Aynı soruyu müşteriye nazikçe bir kez daha sor, net 4 haneli yıl / 5 haneli posta kodu iste.'\n        else:\n            left = d.get('attempts_remaining')\n            if str(d.get('identity_complete')) in ('True', 'true'):\n                vars['id_state'] = 'verified'\n                d['what_to_do_next'] = 'Kimlik doğrulandı. Kısaca teşekkür et.'\n            elif str(d.get('verified')) in ('True', 'true'):\n                d['what_to_do_next'] = 'Bu cevap doğru. Şimdi diğer soruyu sor (doğum yılı doğrulandıysa posta kodunu sor).'\n            elif left is not None and int(left) <= 0:\n                vars['id_state'] = 'failed'\n                d['what_to_do_next'] = 'Kimlik doğrulanamadı, 3 yanlış. Hesap hakkında hiçbir şey söyleme. Aynı turda: kimliğinizi doğrulayamadığımızı, bu nedenle devam edemediğimizi söyle, teşekkür edip vedalaş VE close_call(outcome=not_verified, reason=failed_identity) çağır.'\n            else:\n                d['what_to_do_next'] = 'Bu cevap doğru değil. Kalan hak: ' + str(left) + '. Müşteriye bilginin eşleşmediğini söyle ve AYNI soruyu tekrar sor.'\nexcept Exception:\n    pass\n"
+    },
+    {
+     "type": "function",
+     "config": {
+      "timeoutMs": 12000,
+      "maxRetries": 0
+     },
+     "function": {
+      "name": "schedule_callback",
+      "handler": "__function__:api_call",
+      "description": "Üçüncü kişinin söylediği gün/saatte geri arama planlar. Yalnızca saat tekrarlanıp onaylandıktan sonra çağır.",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "url": {
+         "type": "string",
+         "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/schedule_callback"
+        },
+        "method": {
+         "type": "string",
+         "default": "POST"
+        },
+        "headers": {
+         "type": "object",
+         "properties": {
+          "Content-Type": {
+           "type": "string",
+           "default": "application/json"
+          }
+         }
+        },
+        "body": {
+         "type": "object",
+         "properties": {
+          "customer_id": {
+           "type": "string",
+           "default": "{{customer_id}}"
+          },
+          "callback_date": {
+           "type": "string",
+           "default": "{{callback_date}}",
+           "description": "YYYY-MM-DD, takvimden."
+          },
+          "callback_time": {
+           "type": "string",
+           "default": "{{callback_time}}",
+           "description": "HH:MM 24 saat (öğlen 12 -> 12:00, akşam 5 -> 17:00)."
+          }
+         },
+         "required": [
+          "callback_date",
+          "callback_time"
+         ]
+        }
+       }
+      }
+     },
+     "post_process_code": "try:\n    if isinstance(result, dict):\n        result.pop('header', None)\n        d = result.get('data')\n        if not isinstance(d, dict):\n            d = dict()\n            result['data'] = d\n        failed = d.get('ok') is False or int(result.get('status_code', 200) or 200) >= 500 or result.get('status') not in (None, 'success')\n        err = str(d.get('error') or '')\n        if failed and err == 'outside_window':\n            n = int(vars.get('cb_out') or 0) + 1\n            vars['cb_out'] = n\n            d['what_to_do_next'] = 'Geri arama PLANLANMADI: saat pencere dışında. ' + ('Pencereyi söyleyip (bugün/sonraki iş günü 09:30-18:30) bir kez başka bir saat iste.' if n < 2 else 'Planlama yapma. Teşekkür edip vedalaş ve close_call(outcome=not_reached, reason=no_callback) çağır.')\n        elif failed:\n            d['what_to_do_next'] = 'Geri arama PLANLANMADI (sistem hatası). Aynı değerlerle bir kez tekrar çağır.'\n        else:\n            d['what_to_do_next'] = 'Geri arama planlandı. Saati teyit edip teşekkür et, vedalaş ve close_call(outcome=not_reached, reason=callback) çağır.'\nexcept Exception:\n    pass\n"
+    },
+    {
+     "type": "function",
+     "config": {
+      "timeoutMs": 12000,
+      "maxRetries": 0
+     },
+     "function": {
+      "name": "close_call",
+      "handler": "__function__:api_call",
+      "description": "Aramayı bitirir; HER ZAMAN son araç. Önce aynı turda vedalaşma cümlesini söyle, sonra çağır. Tablo: promise (reason yok) = en az bir söz başarıyla kaydedildi; paid (reason yok) = müşteri zaten ödediğini söyledi ve add_note yazıldı; transferred+hardship / transferred+dispute = temsilciye aktarıldı; no_promise+refused = doğrulanmış, 2 ikna sonrası hâlâ hayır; no_promise+customer_hangup = doğrulanmış, söz yok, müşteri kapatmak istedi; no_promise+system_error = söz 2 kez kaydedilemedi; not_verified+failed_identity = 3 yanlış kimlik cevabı; not_reached+callback = üçüncü kişi, geri arama planlandı; not_reached+no_callback = pencere dışı saat iki kez / saat verilmedi; not_reached+wrong_number = yanlış numara; not_reached+deceased = müşteri vefat etmiş; not_reached+unclear = iki soruda da kişi teyit edilemedi.",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "url": {
+         "type": "string",
+         "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/close_call"
+        },
+        "method": {
+         "type": "string",
+         "default": "POST"
+        },
+        "headers": {
+         "type": "object",
+         "properties": {
+          "Content-Type": {
+           "type": "string",
+           "default": "application/json"
+          }
+         }
+        },
+        "body": {
+         "type": "object",
+         "properties": {
+          "customer_id": {
+           "type": "string",
+           "default": "{{customer_id}}"
+          },
+          "outcome": {
+           "type": "string",
+           "enum": [
+            "promise",
+            "paid",
+            "transferred",
+            "no_promise",
+            "not_verified",
+            "not_reached"
+           ],
+           "default": "{{outcome}}",
+           "description": "Sonuç."
+          },
+          "reason": {
+           "type": "string",
+           "enum": [
+            "hardship",
+            "dispute",
+            "refused",
+            "customer_hangup",
+            "system_error",
+            "failed_identity",
+            "callback",
+            "no_callback",
+            "wrong_number",
+            "deceased",
+            "unclear"
+           ],
+           "default": "{{reason}}",
+           "description": "promise ve paid için boş bırak; diğerlerinde zorunlu."
+          }
+         },
+         "required": [
+          "outcome"
+         ]
+        }
+       }
+      }
+     },
+     "pre_process_code": "try:\n    b = config.get('body')\n    if isinstance(b, dict) and b.get('outcome') in ('promise', 'paid'):\n        b.pop('reason', None)\nexcept Exception:\n    pass\n",
+     "post_process_code": "try:\n    if isinstance(result, dict):\n        result.pop('header', None)\n        d = result.get('data')\n        if not isinstance(d, dict):\n            d = dict()\n            result['data'] = d\n        failed = d.get('ok') is False or int(result.get('status_code', 200) or 200) >= 500 or result.get('status') not in (None, 'success')\n        if not failed or str(d.get('error') or '') == 'call_closed':\n            vars['closed'] = 'yes'\n            d['what_to_do_next'] = 'Arama kapandı. Başka bir şey söyleme.'\n        else:\n            d['what_to_do_next'] = 'Kapatma başarısız. close_call aracını bir kez daha çağır.'\nexcept Exception:\n    pass\n"
+    }
+   ],
+   "transitions": [
+    {
+     "target_node": "goodbye",
+     "description": "Arama kapandı",
+     "condition": {
+      "logic": "or",
+      "conditions": [
+       {
+        "variable": "closed",
+        "operator": "equals",
+        "operand": "yes"
+       },
+       {
+        "variable": "close_call_success_count",
+        "operator": "greater_than",
+        "operand": 0
+       }
+      ]
+     }
+    },
+    {
+     "target_node": "load_account",
+     "description": "Kimlik doğrulandı",
+     "condition": {
+      "logic": "or",
+      "conditions": [
+       {
+        "variable": "id_state",
+        "operator": "equals",
+        "operand": "verified"
+       },
+       {
+        "variable": "verify_identity_response.data.identity_complete",
+        "operator": "equals",
+        "operand": "true"
+       },
+       {
+        "variable": "verify_identity_response.data.identity_complete",
+        "operator": "equals",
+        "operand": "True"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "load_account": {
+   "name": "load_account",
+   "node_type": "api_request",
+   "passthrough": true,
+   "passthrough_default_transition": "facts",
+   "on_enter": {
+    "type": "silent"
+   },
+   "disable_inactivity_monitor": true,
+   "suppress_tool_results": false,
+   "pre_actions": [
+    {
+     "type": "function",
+     "config": {
+      "timeoutMs": 10000,
+      "maxRetries": 2
+     },
+     "function": {
+      "name": "get_account",
+      "handler": "__function__:api_call",
+      "description": "Hesap.",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "url": {
+         "type": "string",
+         "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/get_account"
+        },
+        "method": {
+         "type": "string",
+         "default": "POST"
+        },
+        "headers": {
+         "type": "object",
+         "properties": {
+          "Content-Type": {
+           "type": "string",
+           "default": "application/json"
+          }
+         }
+        },
+        "body": {
+         "type": "object",
+         "properties": {
+          "customer_id": {
+           "type": "string",
+           "default": "{{customer_id}}"
+          }
+         },
+         "required": []
+        }
+       }
+      }
+     }
+    }
+   ],
+   "response_mapping": [
+    {
+     "path": "data.products",
+     "variable": "products"
+    }
+   ],
+   "transitions": [
+    {
+     "target_node": "facts",
+     "description": "always",
+     "condition": {
+      "operator": "always"
+     }
+    }
+   ]
+  },
+  "facts": {
+   "name": "facts",
+   "node_type": "code",
+   "passthrough": true,
+   "passthrough_default_transition": "negotiate",
+   "on_enter": {
+    "type": "silent"
+   },
+   "disable_inactivity_monitor": true,
+   "pre_actions": [
+    {
+     "type": "function",
+     "function": {
+      "name": "code_exec",
+      "handler": "__function__:code_exec",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "code": {
+         "type": "string",
+         "default": "import json, ast, datetime\ntry:\n    HOLIDAYS = dict()\n    HOLIDAYS['2026-10-29'] = 'Cumhuriyet Bayramı'\n    HOLIDAYS['2027-01-01'] = 'Yılbaşı'\n    NAMES = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar']\n    def is_bd(d):\n        return d.weekday() < 5 and d.isoformat() not in HOLIDAYS\n    def nth_bd_after(d, n):\n        c, k = d, 0\n        while k < n:\n            c = c + datetime.timedelta(days=1)\n            if is_bd(c): k += 1\n        return c\n    now = str(vars.get('now') or '')\n    today = datetime.date.fromisoformat(now[:10])\n    def load(v):\n        if isinstance(v, list): return v\n        if isinstance(v, str) and v.strip():\n            for f in (json.loads, ast.literal_eval):\n                try:\n                    x = f(v)\n                    if isinstance(x, list): return x\n                except Exception: pass\n        return None\n    prods = load(vars.get('products'))\n    if prods is None:\n        prods = []\n        for prefix in ('load_account_response.data.products.', 'get_account_response.data.products.'):\n            i = 0\n            while (prefix + str(i) + '.product_id') in vars:\n                p = dict()\n                for k in ('product_id','card_last4','past_due','days_late','minimum_payment'):\n                    kk = prefix + str(i) + '.' + k\n                    if kk in vars: p[k] = vars[kk]\n                prods.append(p); i += 1\n            if prods: break\n    def money(x):\n        x = float(x)\n        if x == int(x):\n            return format(int(x), ',').replace(',', '.') + ' TL'\n        return format(x, ',.2f').replace(',', 'X').replace('.', ',').replace('X', '.') + ' TL'\n    def num(x):\n        x = float(x)\n        return str(int(x)) if x == int(x) else str(round(x, 2))\n    debt = []\n    plan = []\n    n = 0\n    for p in prods:\n        n += 1\n        pid = str(p.get('product_id'))\n        l4 = str(p.get('card_last4'))\n        full = float(p.get('past_due') or 0)\n        mn = float(p.get('minimum_payment') or 0)\n        dl_days = int(float(p.get('days_late') or 0))\n        bdn = 5 if dl_days <= 30 else 2\n        dl = nth_bd_after(today, bdn)\n        debt.append('KART ' + str(n) + ': sonu ' + l4 + ' ile biten kart, gecikmiş borç ' + money(full) + ' (asgari ödeme ' + money(mn) + '), product_id=' + pid)\n        lines = []\n        for i in range(0, 46):\n            d = today + datetime.timedelta(days=i)\n            if i == 0: ans = ('KABUL ' + d.isoformat() + ' (bugün)') if is_bd(d) else ('iş günü değil -> ' + nth_bd_after(d, 1).isoformat() + ' öner')\n            elif d > dl: ans = 'SINIRDAN SONRA -> en geç ' + dl.isoformat() + ' olabileceğini söyle ve onu öner'\n            elif is_bd(d): ans = 'KABUL ' + d.isoformat()\n            else:\n                nbd = nth_bd_after(d, 1)\n                why = HOLIDAYS.get(d.isoformat(), 'hafta sonu')\n                ans = ('İŞ GÜNÜ DEĞİL (' + why + ') -> ' + nbd.isoformat() + ' öner') if nbd <= dl else ('İŞ GÜNÜ DEĞİL (' + why + ') -> ' + dl.isoformat() + ' öner')\n            lines.append('  ' + d.isoformat() + ' ' + NAMES[d.weekday()] + ': ' + ans)\n        plan.append('=== KART ' + str(n) + ' (sonu ' + l4 + ', product_id=' + pid + ') ===\\n'\n            + 'Gecikme ' + str(dl_days) + ' gün -> en geç söz tarihi ' + str(bdn) + ' iş günü: ' + dl.isoformat() + ' ' + NAMES[dl.weekday()] + '.\\n'\n            + 'TUTAR KURALI: tam borç ' + money(full) + ' (araca ' + num(full) + '). Taban (asgari) ' + money(mn) + ' (araca ' + num(mn) + '). Müşterinin söylediği tutar ' + num(mn) + ' ile ' + num(full) + ' arasındaysa (dahil) AYNEN o tutarı kabul et. ' + num(mn) + ' altındaysa kabul etme: asgarinin ' + money(mn) + ' olduğunu söyle. ' + num(full) + ' üstündeyse en fazla ' + money(full) + ' olabileceğini söyle.\\n'\n            + 'İKNA BASAMAKLARI (her biri bir kez):\\n'\n            + '  ADIM 0: Borcu söyle ve sor: \"' + money(full) + ' tutarı en geç ' + dl.isoformat() + ' tarihine kadar ödeyebilir misiniz?\"\\n'\n            + '  ADIM 1 (ilk ret/isteksizlik): gecikme faizi işleyeceğini ve gecikmenin kayıtlara geçeceğini kısaca söyle; ' + money(full) + ' için en geç ' + dl.isoformat() + ' tarihini öner.\\n'\n            + '  ADIM 2 (ikinci ret): asgari ödeme ' + money(mn) + ' tutarını en geç ' + dl.isoformat() + ' tarihine kadar öner.\\n'\n            + '  ADIM 2 sonrası yine hayır: bu kart için söz yok (refused).\\n'\n            + 'TARİH TABLOSU (müşterinin tarihini bul, satırın dediğini yap):\\n' + '\\n'.join(lines))\n    vars['debt_text'] = '\\n'.join(debt)\n    vars['plan_text'] = '\\n\\n'.join(plan)\n    vars['n_products'] = str(len(prods))\n    vars['facts_state'] = 'ok' if prods else 'empty'\nexcept Exception as e:\n    vars['debt_text'] = 'Hesap bilgisi alınamadı: ' + str(e)[:100]\n    vars['plan_text'] = ''\n    vars['facts_state'] = 'error'\n"
+        },
+        "timeout_ms": {
+         "type": "number",
+         "default": 10000
+        }
+       }
+      }
+     }
+    }
+   ],
+   "transitions": [
+    {
+     "target_node": "negotiate",
+     "description": "always",
+     "condition": {
+      "operator": "always"
+     }
+    }
+   ]
+  },
+  "negotiate": {
+   "name": "negotiate",
+   "node_type": "conversation",
+   "interruptible": true,
+   "max_node_turns": 80,
+   "on_enter": {
+    "type": "llm"
+   },
+   "task_message": "GÖREV: Müşteri ({{unvan}} {{soyad}}) kimliğini doğruladı. Borcu söyle ve her kart için ödeme sözü al.\n\nKARTLAR (get_account sırasıyla):\n{{debt_text}}\n\n{{plan_text}}\n\n{{cal_text}}\n\nKURALLAR (öncelik sırasıyla):\n1. ÖZEL DURUMLAR (her an olabilir, ikna etme):\n   a. ZORLUK (işsizlik, iş kaybı, hastalık, maaş alamama gibi ciddi durum): empati kur (\"Anlıyorum, geçmiş olsun.\"), add_note (kısa: ör. \"işsizlik\"), sonra transfer_to_agent(reason=hardship), sonra \"Size yardımcı olabilecek bir temsilciye aktarıyorum.\" deyip vedalaş, close_call(transferred, hardship). Ödeme sözü İSTEME.\n   b. İTİRAZ (\"bu harcamayı ben yapmadım\", \"borcum yok\"): tartışma, add_note, transfer_to_agent(reason=dispute), bilgi ver, close_call(transferred, dispute).\n   c. ZATEN ÖDEDİM: inandırmaya/sorgulamaya çalışma; \"Bilgi için teşekkürler, not alıyorum.\" add_note (ör. \"müşteri ödediğini belirtti\"), vedalaş, close_call(paid) (reason yok).\n   d. Söz vermeden kapatmak istiyor / konuşmak istemiyor: vedalaş, close_call(no_promise, customer_hangup).\n2. AKIŞ: Her kart için sırayla: kartın son 4 hanesi ve gecikmiş tutarı söyle, kartın ADIM 0 sorusunu sor. (Birden çok kart varsa ilk turda kaç kart olduğunu söyleyip ilk kartla başla.)\n3. TARİH: Müşteri bir tarih söylerse o kartın TARİH TABLOSU'ndaki satırı bul ve AYNEN uygula. Tatil/hafta sonu ise nedenini söyle (ör. \"29 Ekim Cumhuriyet Bayramı, iş günü değil\") ve tablodaki tarihi öner. Sınırdan sonraki tarih kabul edilmez: en geç tarihi bir kez yeniden öner (bu ADIM 1 sayılır). Tarih itirazında tutarı düşürme.\n4. TUTAR: Müşteri tutar söylerse TUTAR KURALI'nı uygula. Asgari ile tam borç arasındaki her tutar kabul. Tutar söylemeden yalnızca tarih kabul ederse tutar = tam borç. Asla \"ne kadar ödeyebilirsiniz?\" diye açık soru sorma; basamaktaki tutarı öner.\n5. İKNA: En fazla 2 deneme, her biri BİR KEZ, sırayla (ADIM 1 sonra ADIM 2). Ara soru (robot musun vb.) basamak ilerletmez. ADIM 2'ye de hayır derse: vedalaş, close_call(no_promise, refused) (başka kartta söz kaydedildiyse outcome=promise).\n6. ONAY: Yazmadan önce oku: \"Sonu XXXX ile biten kart için [tutar] TL, [tarih] tarihinde ödeme sözünüzü onaylıyor musunuz?\" Açık \"evet\" gelince create_promise (product_id KART satırından aynen). Kart başına bir söz; kaydedilmiş sözü değiştirme.\n7. KAYIT SONRASI: araç başarılıysa AYNEN \"Ödeme sözünüzü onaylayan bir SMS alacaksınız.\" de (yalnızca başarılı kayıttan sonra). Sistem hatasında what_to_do_next'e uy: önce sessizce bir kez tekrar dene; ikinci hatada dürüstçe söyle, add_note, close_call(no_promise, system_error).\n8. KAPANIŞ: Tüm kartlar bitince teşekkür et, vedalaş ve close_call çağır: en az bir söz kaydedildiyse outcome=promise.",
+   "tools": [
+    {
+     "type": "function",
+     "config": {
+      "timeoutMs": 12000,
+      "maxRetries": 0
+     },
+     "function": {
+      "name": "create_promise",
+      "handler": "__function__:api_call",
+      "description": "Bir kart için ödeme sözü kaydeder. Yalnızca tutar ve tarihi okuyup müşteri açıkça 'evet' dedikten sonra çağır. Kart başına bir söz.",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "url": {
+         "type": "string",
+         "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/create_promise"
+        },
+        "method": {
+         "type": "string",
+         "default": "POST"
+        },
+        "headers": {
+         "type": "object",
+         "properties": {
+          "Content-Type": {
+           "type": "string",
+           "default": "application/json"
+          }
+         }
+        },
+        "body": {
+         "type": "object",
+         "properties": {
+          "customer_id": {
+           "type": "string",
+           "default": "{{customer_id}}"
+          },
+          "product_id": {
+           "type": "string",
+           "default": "{{product_id}}",
+           "description": "KART satırındaki product_id, aynen kopyala."
+          },
+          "amount": {
+           "type": "number",
+           "default": "{{amount}}",
+           "description": "TL tutarı düz sayı (iki bin -> 2000)."
+          },
+          "payment_date": {
+           "type": "string",
+           "default": "{{payment_date}}",
+           "description": "YYYY-MM-DD, TARİH TABLOSU'nda KABUL olan bir tarih."
+          }
+         },
+         "required": [
+          "product_id",
+          "amount",
+          "payment_date"
+         ]
+        }
+       }
+      }
+     },
+     "pre_process_code": "try:\n    b = config.get('body')\n    if isinstance(b, dict):\n        vars['last_pid'] = str(b.get('product_id') or '')\n        s = str(b.get('amount') or '').replace('TL', '').strip()\n        if s.count('.') and s.count(','):\n            s = s.replace('.', '').replace(',', '.')\n        elif s.count(',') == 1 and len(s.split(',')[1]) == 2:\n            s = s.replace(',', '.')\n        else:\n            s = s.replace(',', '').replace('.', '') if (s.count('.') and len(s.split('.')[-1]) == 3) else s\n        try:\n            b['amount'] = float(s)\n        except Exception:\n            pass\nexcept Exception:\n    pass\n",
+     "post_process_code": "try:\n    if isinstance(result, dict):\n        result.pop('header', None)\n        d = result.get('data')\n        if not isinstance(d, dict):\n            d = dict()\n            result['data'] = d\n        failed = d.get('ok') is False or int(result.get('status_code', 200) or 200) >= 500 or result.get('status') not in (None, 'success')\n        pid = str(vars.get('last_pid') or '')\n        err = str(d.get('error') or '')\n        if failed and err in ('invalid_date', 'below_minimum', 'above_past_due'):\n            d['what_to_do_next'] = 'KAYDEDİLMEDİ (' + err + '). Kayıt olmadığını söyleme; tarih/tutar kurala uymuyor. TARİH TABLOSU ve TUTAR KURALI ile geçerli bir değer öner, müşteri onaylarsa yeniden çağır.'\n        elif failed:\n            k = 'pfail_' + pid\n            n = int(vars.get(k) or 0) + 1\n            vars[k] = n\n            if n < 2:\n                d['what_to_do_next'] = 'KAYDEDİLMEDİ (sistem hatası). Müşteriye bir şey söylemeden, hemen create_promise aracını AYNI değerlerle bir kez daha çağır.'\n            else:\n                d['what_to_do_next'] = 'İkinci deneme de başarısız, söz KAYDEDİLEMEDİ. SMS cümlesini SÖYLEME. Müşteriye dürüstçe teknik bir sorun nedeniyle sözü sisteme işleyemediğini söyle, add_note ile not yaz (sistem hatası, söz kaydedilemedi, tutar ve tarih), sonra vedalaşıp close_call çağır (bu aramada başka kayıtlı söz yoksa outcome=no_promise reason=system_error; varsa outcome=promise).'\n        else:\n            vars['promises_ok'] = int(vars.get('promises_ok') or 0) + 1\n            vars['ok_' + pid] = 'yes'\n            d['what_to_do_next'] = 'Söz başarıyla kaydedildi. Şimdi AYNEN söyle: \"Ödeme sözünüzü onaylayan bir SMS alacaksınız.\" Başka söz bekleyen kart varsa ona geç; yoksa teşekkür edip vedalaş ve close_call(outcome=promise) çağır.'\nexcept Exception:\n    pass\n"
+    },
+    {
+     "type": "function",
+     "config": {
+      "timeoutMs": 12000,
+      "maxRetries": 0
+     },
+     "function": {
+      "name": "add_note",
+      "handler": "__function__:api_call",
+      "description": "Arama notu ekler (zorluk, itiraz, zaten ödedim, sistem hatası).",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "url": {
+         "type": "string",
+         "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/add_note"
+        },
+        "method": {
+         "type": "string",
+         "default": "POST"
+        },
+        "headers": {
+         "type": "object",
+         "properties": {
+          "Content-Type": {
+           "type": "string",
+           "default": "application/json"
+          }
+         }
+        },
+        "body": {
+         "type": "object",
+         "properties": {
+          "customer_id": {
+           "type": "string",
+           "default": "{{customer_id}}"
+          },
+          "text": {
+           "type": "string",
+           "default": "{{note_text}}",
+           "description": "Kısa Türkçe not, ilgili kartın son 4 hanesi ile."
+          }
+         },
+         "required": [
+          "text"
+         ]
+        }
+       }
+      }
+     },
+     "post_process_code": "try:\n    if isinstance(result, dict):\n        result.pop('header', None)\n        d = result.get('data')\n        if not isinstance(d, dict):\n            d = dict()\n            result['data'] = d\n        failed = d.get('ok') is False or int(result.get('status_code', 200) or 200) >= 500 or result.get('status') not in (None, 'success')\n        if failed:\n            d['what_to_do_next'] = 'İşlem BAŞARISIZ, yapılmadı. Bir kez aynı değerlerle tekrar dene. Yapıldı deme.'\n        else:\n            d['what_to_do_next'] = 'Not eklendi. Sıradaki adıma geç (aktarım veya kapanış).'\nexcept Exception:\n    pass\n"
+    },
+    {
+     "type": "function",
+     "config": {
+      "timeoutMs": 12000,
+      "maxRetries": 0
+     },
+     "function": {
+      "name": "transfer_to_agent",
+      "handler": "__function__:api_call",
+      "description": "Canlı temsilciye aktarır (zorluk veya itiraz). Önce add_note çağır.",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "url": {
+         "type": "string",
+         "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/transfer_to_agent"
+        },
+        "method": {
+         "type": "string",
+         "default": "POST"
+        },
+        "headers": {
+         "type": "object",
+         "properties": {
+          "Content-Type": {
+           "type": "string",
+           "default": "application/json"
+          }
+         }
+        },
+        "body": {
+         "type": "object",
+         "properties": {
+          "customer_id": {
+           "type": "string",
+           "default": "{{customer_id}}"
+          },
+          "reason": {
+           "type": "string",
+           "enum": [
+            "hardship",
+            "dispute"
+           ],
+           "default": "{{transfer_reason}}",
+           "description": "hardship = maddi zorluk; dispute = borca/harcamaya itiraz."
+          }
+         },
+         "required": [
+          "reason"
+         ]
+        }
+       }
+      }
+     },
+     "post_process_code": "try:\n    if isinstance(result, dict):\n        result.pop('header', None)\n        d = result.get('data')\n        if not isinstance(d, dict):\n            d = dict()\n            result['data'] = d\n        failed = d.get('ok') is False or int(result.get('status_code', 200) or 200) >= 500 or result.get('status') not in (None, 'success')\n        if failed:\n            d['what_to_do_next'] = 'İşlem BAŞARISIZ, yapılmadı. Bir kez aynı değerlerle tekrar dene. Yapıldı deme.'\n        else:\n            d['what_to_do_next'] = 'Aktarım yapıldı. Müşteriye temsilciye aktarıldığını söyle, vedalaş ve close_call(outcome=transferred, reason=aynı neden) çağır.'\nexcept Exception:\n    pass\n"
+    },
+    {
+     "type": "function",
+     "config": {
+      "timeoutMs": 12000,
+      "maxRetries": 0
+     },
+     "function": {
+      "name": "close_call",
+      "handler": "__function__:api_call",
+      "description": "Aramayı bitirir; HER ZAMAN son araç. Önce aynı turda vedalaşma cümlesini söyle, sonra çağır. Tablo: promise (reason yok) = en az bir söz başarıyla kaydedildi; paid (reason yok) = müşteri zaten ödediğini söyledi ve add_note yazıldı; transferred+hardship / transferred+dispute = temsilciye aktarıldı; no_promise+refused = doğrulanmış, 2 ikna sonrası hâlâ hayır; no_promise+customer_hangup = doğrulanmış, söz yok, müşteri kapatmak istedi; no_promise+system_error = söz 2 kez kaydedilemedi; not_verified+failed_identity = 3 yanlış kimlik cevabı; not_reached+callback = üçüncü kişi, geri arama planlandı; not_reached+no_callback = pencere dışı saat iki kez / saat verilmedi; not_reached+wrong_number = yanlış numara; not_reached+deceased = müşteri vefat etmiş; not_reached+unclear = iki soruda da kişi teyit edilemedi.",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "url": {
+         "type": "string",
+         "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/close_call"
+        },
+        "method": {
+         "type": "string",
+         "default": "POST"
+        },
+        "headers": {
+         "type": "object",
+         "properties": {
+          "Content-Type": {
+           "type": "string",
+           "default": "application/json"
+          }
+         }
+        },
+        "body": {
+         "type": "object",
+         "properties": {
+          "customer_id": {
+           "type": "string",
+           "default": "{{customer_id}}"
+          },
+          "outcome": {
+           "type": "string",
+           "enum": [
+            "promise",
+            "paid",
+            "transferred",
+            "no_promise",
+            "not_verified",
+            "not_reached"
+           ],
+           "default": "{{outcome}}",
+           "description": "Sonuç."
+          },
+          "reason": {
+           "type": "string",
+           "enum": [
+            "hardship",
+            "dispute",
+            "refused",
+            "customer_hangup",
+            "system_error",
+            "failed_identity",
+            "callback",
+            "no_callback",
+            "wrong_number",
+            "deceased",
+            "unclear"
+           ],
+           "default": "{{reason}}",
+           "description": "promise ve paid için boş bırak; diğerlerinde zorunlu."
+          }
+         },
+         "required": [
+          "outcome"
+         ]
+        }
+       }
+      }
+     },
+     "pre_process_code": "try:\n    b = config.get('body')\n    if isinstance(b, dict) and b.get('outcome') in ('promise', 'paid'):\n        b.pop('reason', None)\nexcept Exception:\n    pass\n",
+     "post_process_code": "try:\n    if isinstance(result, dict):\n        result.pop('header', None)\n        d = result.get('data')\n        if not isinstance(d, dict):\n            d = dict()\n            result['data'] = d\n        failed = d.get('ok') is False or int(result.get('status_code', 200) or 200) >= 500 or result.get('status') not in (None, 'success')\n        if not failed or str(d.get('error') or '') == 'call_closed':\n            vars['closed'] = 'yes'\n            d['what_to_do_next'] = 'Arama kapandı. Başka bir şey söyleme.'\n        else:\n            d['what_to_do_next'] = 'Kapatma başarısız. close_call aracını bir kez daha çağır.'\nexcept Exception:\n    pass\n"
+    }
+   ],
+   "transitions": [
+    {
+     "target_node": "goodbye",
+     "description": "Arama kapandı",
+     "condition": {
+      "logic": "or",
+      "conditions": [
+       {
+        "variable": "closed",
+        "operator": "equals",
+        "operand": "yes"
+       },
+       {
+        "variable": "close_call_success_count",
+        "operator": "greater_than",
+        "operand": 0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  "goodbye": {
+   "name": "goodbye",
+   "node_type": "end_call",
+   "on_enter": {
+    "type": "silent"
+   },
+   "disable_inactivity_monitor": true,
+   "transitions": [],
+   "terminal": {
+    "type": "function",
+    "function": {
+     "name": "call_closed",
+     "handler": "__function__:end_call",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "message_mode": {
+        "type": "string",
+        "default": "none"
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

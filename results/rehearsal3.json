@@ -1,0 +1,495 @@
+{
+ "agent_id": "68ed38d2-a008-4b8a-af1a-c70e6c009bed",
+ "simulation_id": "1866410f-fbbd-486f-ac8a-6f4b8bbb6ba7",
+ "iteration_id": "9df0f825-2173-4a41-8e48-a6f00a84635e",
+ "seconds": 201,
+ "passed": 6,
+ "total": 6,
+ "runs": 3,
+ "final": [
+  {
+   "id": "AK-1001",
+   "family": "Happy path",
+   "passes": 3,
+   "runs": 3,
+   "pass": true
+  },
+  {
+   "id": "AK-1002",
+   "family": "Third party",
+   "passes": 3,
+   "runs": 3,
+   "pass": true
+  },
+  {
+   "id": "AK-1003",
+   "family": "Identity failure",
+   "passes": 3,
+   "runs": 3,
+   "pass": true
+  },
+  {
+   "id": "AK-1004",
+   "family": "Holiday date",
+   "passes": 3,
+   "runs": 3,
+   "pass": true
+  },
+  {
+   "id": "AK-1005",
+   "family": "Hardship",
+   "passes": 3,
+   "runs": 3,
+   "pass": true
+  },
+  {
+   "id": "AK-1006",
+   "family": "Tool failure, two cards",
+   "passes": 3,
+   "runs": 3,
+   "pass": true
+  }
+ ],
+ "rows": [
+  {
+   "id": "AK-1001",
+   "level": "medium",
+   "family": "Happy path",
+   "pass": true,
+   "failed": [],
+   "call_id": "474db233-a37b-4969-8508-c69a5b641581",
+   "tools": [
+    "verify_identity",
+    "verify_identity",
+    "get_account",
+    "create_promise",
+    "close_call"
+   ],
+   "customer_id": "AK-1001",
+   "slowest_turn_s": 7.7,
+   "ended": "assistant-ended-call"
+  },
+  {
+   "id": "AK-1002",
+   "level": "medium",
+   "family": "Third party",
+   "pass": true,
+   "failed": [],
+   "call_id": "85bbb707-034d-4412-88f1-844c93312150",
+   "tools": [
+    "schedule_callback",
+    "close_call"
+   ],
+   "customer_id": "AK-1002",
+   "slowest_turn_s": 0.0,
+   "ended": "assistant-ended-call"
+  },
+  {
+   "id": "AK-1003",
+   "level": "medium",
+   "family": "Identity failure",
+   "pass": true,
+   "failed": [],
+   "call_id": "bbd9b868-9774-496b-9bb7-15c871b84474",
+   "tools": [
+    "verify_identity",
+    "verify_identity",
+    "verify_identity",
+    "verify_identity",
+    "close_call"
+   ],
+   "customer_id": "AK-1003",
+   "slowest_turn_s": 3.8,
+   "ended": "assistant-ended-call"
+  },
+  {
+   "id": "AK-1004",
+   "level": "medium",
+   "family": "Holiday date",
+   "pass": true,
+   "failed": [],
+   "call_id": "2204d253-9d22-45cc-840c-17e5de188b9f",
+   "tools": [
+    "verify_identity",
+    "verify_identity",
+    "get_account",
+    "create_promise",
+    "close_call"
+   ],
+   "customer_id": "AK-1004",
+   "slowest_turn_s": 4.0,
+   "ended": "assistant-ended-call"
+  },
+  {
+   "id": "AK-1005",
+   "level": "medium",
+   "family": "Hardship",
+   "pass": true,
+   "failed": [],
+   "call_id": "09bbed08-f1b0-43ba-92e7-0d92ad98d144",
+   "tools": [
+    "verify_identity",
+    "verify_identity",
+    "get_account",
+    "add_note",
+    "transfer_to_agent",
+    "close_call"
+   ],
+   "customer_id": "AK-1005",
+   "slowest_turn_s": 2.4,
+   "ended": "assistant-ended-call"
+  },
+  {
+   "id": "AK-1006",
+   "level": "medium",
+   "family": "Tool failure, two cards",
+   "pass": true,
+   "failed": [],
+   "call_id": "ce8ced19-9cab-4d19-94f8-f85f57b9ce6d",
+   "tools": [
+    "verify_identity",
+    "verify_identity",
+    "get_account",
+    "create_promise",
+    "create_promise",
+    "create_promise",
+    "close_call"
+   ],
+   "customer_id": "AK-1006",
+   "slowest_turn_s": 2.7,
+   "ended": "assistant-ended-call"
+  }
+ ],
+ "all_rows": [
+  [
+   {
+    "id": "AK-1001",
+    "level": "medium",
+    "family": "Happy path",
+    "pass": true,
+    "failed": [],
+    "call_id": "39878904-9399-4e79-a4e6-2a71dff5acd0",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "get_account",
+     "create_promise",
+     "close_call"
+    ],
+    "customer_id": "AK-1001",
+    "slowest_turn_s": 2.1,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1002",
+    "level": "medium",
+    "family": "Third party",
+    "pass": true,
+    "failed": [],
+    "call_id": "ad68107b-b7bc-4b63-99f1-a5afd82bc611",
+    "tools": [
+     "schedule_callback",
+     "close_call"
+    ],
+    "customer_id": "AK-1002",
+    "slowest_turn_s": 0.1,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1003",
+    "level": "medium",
+    "family": "Identity failure",
+    "pass": true,
+    "failed": [],
+    "call_id": "1de596b1-1816-4446-b289-9e76be05f1a5",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "verify_identity",
+     "verify_identity",
+     "close_call"
+    ],
+    "customer_id": "AK-1003",
+    "slowest_turn_s": 2.8,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1004",
+    "level": "medium",
+    "family": "Holiday date",
+    "pass": true,
+    "failed": [],
+    "call_id": "c06a9169-fdb6-4fd3-92ac-3a3f90018eeb",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "get_account",
+     "create_promise",
+     "close_call"
+    ],
+    "customer_id": "AK-1004",
+    "slowest_turn_s": 3.4,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1005",
+    "level": "medium",
+    "family": "Hardship",
+    "pass": true,
+    "failed": [],
+    "call_id": "1a4f380d-3ebc-49a9-bb72-6e49b7f062a2",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "get_account",
+     "transfer_to_agent",
+     "add_note",
+     "close_call"
+    ],
+    "customer_id": "AK-1005",
+    "slowest_turn_s": 2.3,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1006",
+    "level": "medium",
+    "family": "Tool failure, two cards",
+    "pass": true,
+    "failed": [],
+    "call_id": "3887d6d1-4e55-43ac-a76c-d0996b18a2ca",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "get_account",
+     "create_promise",
+     "create_promise",
+     "create_promise",
+     "close_call"
+    ],
+    "customer_id": "AK-1006",
+    "slowest_turn_s": 3.7,
+    "ended": "assistant-ended-call"
+   }
+  ],
+  [
+   {
+    "id": "AK-1001",
+    "level": "medium",
+    "family": "Happy path",
+    "pass": true,
+    "failed": [],
+    "call_id": "ee285343-6369-42f5-9bfb-6d8f0aa4ff72",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "get_account",
+     "create_promise",
+     "close_call"
+    ],
+    "customer_id": "AK-1001",
+    "slowest_turn_s": 2.8,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1002",
+    "level": "medium",
+    "family": "Third party",
+    "pass": true,
+    "failed": [],
+    "call_id": "c22731c9-7535-4889-b04e-124b3770c877",
+    "tools": [
+     "schedule_callback",
+     "close_call"
+    ],
+    "customer_id": "AK-1002",
+    "slowest_turn_s": 0.0,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1003",
+    "level": "medium",
+    "family": "Identity failure",
+    "pass": true,
+    "failed": [],
+    "call_id": "e7f1bc46-5b88-4718-8e70-3f62e8d4043e",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "verify_identity",
+     "verify_identity",
+     "close_call"
+    ],
+    "customer_id": "AK-1003",
+    "slowest_turn_s": 1.4,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1004",
+    "level": "medium",
+    "family": "Holiday date",
+    "pass": true,
+    "failed": [],
+    "call_id": "9e822c64-4b92-44f4-99e1-7edd72b1aef8",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "get_account",
+     "create_promise",
+     "close_call"
+    ],
+    "customer_id": "AK-1004",
+    "slowest_turn_s": 1.9,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1005",
+    "level": "medium",
+    "family": "Hardship",
+    "pass": true,
+    "failed": [],
+    "call_id": "067a134e-9564-4e44-9214-38bf0d21e75b",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "get_account",
+     "transfer_to_agent",
+     "add_note",
+     "close_call"
+    ],
+    "customer_id": "AK-1005",
+    "slowest_turn_s": 1.0,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1006",
+    "level": "medium",
+    "family": "Tool failure, two cards",
+    "pass": true,
+    "failed": [],
+    "call_id": "f0748bfb-331a-42dd-9a3c-840f73677383",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "get_account",
+     "create_promise",
+     "create_promise",
+     "create_promise",
+     "close_call"
+    ],
+    "customer_id": "AK-1006",
+    "slowest_turn_s": 6.6,
+    "ended": "assistant-ended-call"
+   }
+  ],
+  [
+   {
+    "id": "AK-1001",
+    "level": "medium",
+    "family": "Happy path",
+    "pass": true,
+    "failed": [],
+    "call_id": "474db233-a37b-4969-8508-c69a5b641581",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "get_account",
+     "create_promise",
+     "close_call"
+    ],
+    "customer_id": "AK-1001",
+    "slowest_turn_s": 7.7,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1002",
+    "level": "medium",
+    "family": "Third party",
+    "pass": true,
+    "failed": [],
+    "call_id": "85bbb707-034d-4412-88f1-844c93312150",
+    "tools": [
+     "schedule_callback",
+     "close_call"
+    ],
+    "customer_id": "AK-1002",
+    "slowest_turn_s": 0.0,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1003",
+    "level": "medium",
+    "family": "Identity failure",
+    "pass": true,
+    "failed": [],
+    "call_id": "bbd9b868-9774-496b-9bb7-15c871b84474",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "verify_identity",
+     "verify_identity",
+     "close_call"
+    ],
+    "customer_id": "AK-1003",
+    "slowest_turn_s": 3.8,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1004",
+    "level": "medium",
+    "family": "Holiday date",
+    "pass": true,
+    "failed": [],
+    "call_id": "2204d253-9d22-45cc-840c-17e5de188b9f",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "get_account",
+     "create_promise",
+     "close_call"
+    ],
+    "customer_id": "AK-1004",
+    "slowest_turn_s": 4.0,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1005",
+    "level": "medium",
+    "family": "Hardship",
+    "pass": true,
+    "failed": [],
+    "call_id": "09bbed08-f1b0-43ba-92e7-0d92ad98d144",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "get_account",
+     "add_note",
+     "transfer_to_agent",
+     "close_call"
+    ],
+    "customer_id": "AK-1005",
+    "slowest_turn_s": 2.4,
+    "ended": "assistant-ended-call"
+   },
+   {
+    "id": "AK-1006",
+    "level": "medium",
+    "family": "Tool failure, two cards",
+    "pass": true,
+    "failed": [],
+    "call_id": "ce8ced19-9cab-4d19-94f8-f85f57b9ce6d",
+    "tools": [
+     "verify_identity",
+     "verify_identity",
+     "get_account",
+     "create_promise",
+     "create_promise",
+     "create_promise",
+     "close_call"
+    ],
+    "customer_id": "AK-1006",
+    "slowest_turn_s": 2.7,
+    "ended": "assistant-ended-call"
+   }
+  ]
+ ]
+}
