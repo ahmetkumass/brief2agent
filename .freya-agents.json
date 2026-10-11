@@ -14,6 +14,7 @@
  },
  "rehearsal": {
   "workflow_id": "c68c0fd0-c120-458c-800e-133e6bdeadaa",
-  "agent_id": "c85d308a-45b6-4443-9896-e38247f44655"
+  "agent_id": "c85d308a-45b6-4443-9896-e38247f44655",
+  "version": 3
  }
 }

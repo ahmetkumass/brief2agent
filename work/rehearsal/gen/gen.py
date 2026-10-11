@@ -298,14 +298,29 @@ note_tool = api_tool('add_note',
     'Arama notu ekle (kısa, Türkçe). Zorluk, itiraz, zaten ödedim ve iki kez başarısız söz kaydında kullan.',
     {"text": {"type": "string", "default": "{{note_text}}", "description": "Kısa not"}},
     ["text"], None,
-    SIMPLE_POST('Not kaydedildi (müşteriye not hakkında bir şey söyleme). Kurala göre sıradaki adıma geç (aktarım veya kapanış).',
+    hook_head('''        if failed:
+            d['what_to_do_next'] = 'Not kaydedilemedi. add_note aracını bir kez daha aynı metinle çağır.'
+        else:
+            vars['note_ok'] = 'yes'
+            d['what_to_do_next'] = 'Not kaydedildi (müşteriye not hakkında bir şey söyleme). Kurala göre sıradaki adıma geç: zorluk/itirazda transfer_to_agent (henüz yapılmadıysa), sonra vedalaş + close_call; zaten ödedimde vedalaş + close_call(paid).'
+'''))
+_unused2 = (('',
                 'Not kaydedilemedi. add_note aracını bir kez daha aynı metinle çağır.'))
 
 transfer_tool = api_tool('transfer_to_agent',
-    'Canlı temsilciye aktar. reason: hardship (işsizlik, hastalık vb. ödeme güçlüğü) veya dispute (borca/harcamaya itiraz). Önce add_note çağır.',
+    'Canlı temsilciye aktar. ÖNCE add_note çağrılmış olmalı (zorunlu). reason: hardship (işsizlik, hastalık vb. ödeme güçlüğü) veya dispute (borca/harcamaya itiraz). Önce add_note çağır.',
     {"reason": {"type": "string", "enum": ["hardship", "dispute"], "default": "{{transfer_reason}}", "description": "hardship veya dispute"}},
     ["reason"], None,
-    SIMPLE_POST('Aktarım başarılı. Müşteriye kısa bir cümleyle temsilciye aktarıldığını söyle, vedalaş ve aynı turda close_call çağır: outcome=transferred, reason=aktarımdaki reason (hardship veya dispute).',
+    hook_head('''        if failed:
+            d['what_to_do_next'] = 'Aktarım YAPILAMADI. transfer_to_agent aracını bir kez daha aynı değerle çağır. Aktarıldı deme.'
+        else:
+            vars['transfer_reason_done'] = str(config.get('body', dict()).get('reason') or '')
+            if vars.get('note_ok') != 'yes':
+                d['what_to_do_next'] = 'Aktarım başarılı AMA not eksik. Müşteriye bir şey demeden ŞİMDİ add_note çağır (kısa not: durumun ne olduğu). Not sonrası temsilciye aktarıldığını söyle, vedalaş ve close_call(outcome=transferred, reason=' + vars['transfer_reason_done'] + ').'
+            else:
+                d['what_to_do_next'] = 'Aktarım başarılı. Müşteriye kısa bir cümleyle temsilciye aktarıldığını söyle, vedalaş ve aynı turda close_call çağır: outcome=transferred, reason=' + vars['transfer_reason_done'] + '.'
+'''))
+_unused = (('',
                 'Aktarım YAPILAMADI. transfer_to_agent aracını bir kez daha aynı değerle çağır. Aktarıldı deme.'))
 
 close_tool = api_tool('close_call',
@@ -343,9 +358,9 @@ A. HATTAKİ KİŞİ
 - Robot/yapay zeka mısın sorusu: "Evet, Anadolu Kart Bank'ın dijital asistanıyım." de ve devam et.
 - YANLIŞ NUMARA ("burada öyle biri yok", "yanlış numara"): özür dile, vedalaş, close_call(not_reached, wrong_number).
 - VEFAT (müşteri vefat etti): AYNEN "Başınız sağolsun." de, başka hiçbir şey sorma, aynı turda close_call(not_reached, deceased).
-- BAŞKASI AÇTI (eşi, yakını, "o burada değil"): arama nedenini SÖYLEME, güvenlik sorusu sorma, bilgi verme. Sor: "{{unvan}} {{soyad}}'a ne zaman ulaşabiliriz?"
+- BAŞKASI AÇTI (eşi, yakını, "o burada değil"): arama nedenini SÖYLEME, güvenlik sorusu sorma, bilgi verme. Sor: "Kendisine ne zaman ulaşabiliriz?"
   {{cb_text}}
-  Verilen gün+saat pencere İÇİNDEYSE: schedule_callback(callback_date YYYY-MM-DD, callback_time HH:MM) çağır ("yarın saat 12" -> 12:00; "öğleden sonra 3" -> 15:00). ok=true sonrası teşekkür, vedalaş, close_call(not_reached, callback).
+  Verilen gün+saat pencere İÇİNDEYSE: önce HİÇBİR ŞEY SÖYLEMEDEN schedule_callback(callback_date YYYY-MM-DD, callback_time HH:MM) çağır ("yarın saat 12" -> 12:00; "öğleden sonra 3" -> 15:00). Araç sonucu gelmeden "oluşturuyorum/planlıyorum/not aldım" deme. ok=true sonrası: "Teşekkür ederim, o saatte tekrar arayacağız. İyi günler." de ve aynı turda close_call(not_reached, callback).
   Pencere DIŞIYSA (çağırmadan önce kendin kontrol et): bir kez "O saatte arayamıyoruz; 09:30 ile 18:30 arasında, bugün veya bir sonraki iş günü uygun bir saat söyleyebilir misiniz?" diye sor. İkinci cevap da dışarıdaysa veya saat veremezlerse: planlama, vedalaş, close_call(not_reached, no_callback).
   Kişi sonra "aslında benim" derse kimlik doğrulamaya geç.
 

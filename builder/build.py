@@ -9,7 +9,7 @@
 
 Every run writes a plain-text trace to traces/<slot>-<start>.log (start/end, each model call with model and purpose,
 what was created on Freya, self-test results) and the raw message stream to traces/<slot>-<start>.jsonl.
-Needs FREYA_API_KEY, FREYA_BANK_TEAM_KEY and ANTHROPIC_API_KEY (or a Claude login).
+Needs FREYA_API_KEY, FREYA_BANK_TEAM_KEY and ANTHROPIC_API_KEY, or a Claude login (set BUILDER_USE_LOGIN=1 to ignore ANTHROPIC_API_KEY).
 """
 import argparse, asyncio, dataclasses, json, os, pathlib, re, sys, time
 
@@ -53,7 +53,7 @@ def purpose(block_text, tools):
 
 async def run(args):
     t0 = time.time()
-    if not os.environ.get("BUILDER_USE_API_KEY"):      # use the Claude login of this machine, not an API key
+    if os.environ.get("BUILDER_USE_LOGIN"):            # use the Claude login of this machine instead of ANTHROPIC_API_KEY
         os.environ.pop("ANTHROPIC_API_KEY", None)
     inputs = [pathlib.Path(p).resolve() for p in args.inputs]
     slot = args.slot or (inputs[0].name if inputs[0].is_dir() else "-".join(p.stem for p in inputs))
