@@ -128,12 +128,21 @@ try:
         s = ('Product ' + str(p.get('product_id')) + ' (' + name + '): band ' + band + ', persuasion attempts allowed: ' + str(att) + '.\\n'
              + 'FULL amount = ' + money(p.get('past_due')) + '. FLOOR (lowest amount you may record) = ' + money(floor) + '.\\n'
              + 'DEADLINE (latest date you may record) = ' + deadline.isoformat() + ' (' + spoken(deadline) + ').\\n'
-             + 'Attempt 1 offer date = ' + lw.isoformat() + ' (' + spoken(lw) + ').\\n')
+             + 'Attempt 1 offer = ' + money(p.get('past_due')) + ' on ' + lw.isoformat() + ' (' + spoken(lw) + '); BUT if the customer has already said the full amount is too much, attempt 1 = the floor ' + money(floor) + ' on ' + lw.isoformat() + ' (' + spoken(lw) + ').\\n')
         if att == 2:
             s += 'Attempt 2 offer = the floor ' + money(floor) + ' on the deadline ' + deadline.isoformat() + ' (' + spoken(deadline) + ').\\n'
         else:
             s += 'There is NO attempt 2 for this product (early band). After attempt 1 is refused, close no_promise/refused.\\n'
-        s += 'VALID PROMISE DATES (only these): ' + ', '.join(valid) + '.'
+        s += 'VALID PROMISE DATES (only these): ' + ', '.join(valid) + '.\\n'
+        subs = []
+        d = today
+        while d <= deadline:
+            if not is_bd(d):
+                why = 'holiday' if d.isoformat() in HOLIDAYS else 'weekend'
+                subs.append(d.isoformat() + ' ' + NAMES[d.weekday()] + ' is a ' + why + ' -> offer ' + nth_bd_after(d, 1).isoformat() + ' (' + spoken(nth_bd_after(d, 1)) + ')')
+            d = d + datetime.timedelta(days=1)
+        s += 'NON-BUSINESS DAYS before the deadline and what to offer instead: ' + ('; '.join(subs) if subs else 'none') + '.\\n'
+        s += 'Any date after ' + deadline.isoformat() + ' is after the deadline -> offer the deadline.'
         plan.append(s)
     vars['debt_text'] = '\\n'.join(debt)
     vars['plan_text'] = '\\n'.join(plan)
@@ -300,7 +309,7 @@ Ending a call: in ONE turn thank the customer and say goodbye, and call close_ca
 
 INTRO_TASK = """STAGE: opening and identity check. You do NOT know anything about the account. Before verification never say "collections", "debt", "payment", "late", "overdue", any amount or any product, to anyone, including relatives. If asked what the call is about, say you can explain only after the security check.
 
-The opening was already said: "Hello, this is Freya Bank's digital assistant. This call is recorded. Am I speaking with {{title}} {{last_name}}?"
+The opening was already said: "Hello, this is Freya Bank's digital assistant. Please note that we record this call. Am I speaking with {{title}} {{last_name}}?"
 
 A. Who is on the line.
 - Confirmation counts ONLY if they say yes / that's me / speaking / their own name ({{first_name}} or {{last_name}}). "Hello", "go ahead", "who is this" do not count. If not confirmed, answer any question they asked first, then ask once more "Am I speaking with {{title}} {{last_name}}?". If still unclear after that second ask: close not_reached / unclear.
@@ -341,17 +350,18 @@ Never offer a discount, waiver, instalment plan or any other term. Never ask "ho
 DATE RULES (for any date the customer names):
 - Date in VALID PROMISE DATES -> accept.
 - "Next <weekday>" = that weekday in the following calendar week (see the "(next week)" tags in CALENDAR). "This <weekday>" = in the current week. "Today", "tomorrow" relative to today.
-- Weekend or holiday not after the deadline -> offer the next business day after it.
+- Weekend or holiday not after the deadline -> do NOT offer the deadline; offer the next business day after it, exactly as listed in NON-BUSINESS DAYS in FACTS (e.g. a Monday holiday -> the Tuesday).
 - After the deadline -> say the latest date you can record is the deadline (say it) and offer it. If they refuse the deadline, that is a flat refusal (uses an attempt).
 - Vague ("next week", "end of month", "when my salary comes") -> ask once for the exact day; if still none, propose the deadline.
 AMOUNT RULES:
 - Default amount is the FULL past-due amount.
-- If they say the full amount is too much: offer the FLOOR once, saying the rest stays overdue. If they refuse the floor -> flat refusal (uses an attempt).
+- If they say the full amount is too much: offer the FLOOR once (for today), saying the rest stays overdue. If they refuse the floor -> flat refusal (uses an attempt).
 - Customer proposes an amount from the floor up to the full amount (inclusive) -> accept. Below the floor -> say it cannot be recorded and offer the floor once; if not accepted -> flat refusal.
 - A date or amount the customer proposes is never a refusal.
 
 PERSUASION (a "no" to paying today with no date and no amount, or a non-answer, is a flat refusal and uses one attempt):
-- Attempt 1: propose the attempt 1 offer date from FACTS for the full amount (or for the floor if they already said the full amount is too much).
+- Attempt 1: propose the attempt 1 offer from FACTS. Once the customer has said the full amount is too much, NEVER propose the full amount again: every later offer uses the floor.
+- Refusing the floor (e.g. "still too much") is a flat refusal and uses attempt 1 -> immediately propose attempt 1 (floor on the attempt 1 date).
 - Attempt 2 (only if the product allows 2 attempts): propose the floor amount on the deadline.
 - When the allowed attempts are used up and they still refuse: stop, do not repeat refused offers, close no_promise / refused.
 
@@ -365,7 +375,7 @@ CONFIRM AND RECORD:
 nodes = {
   "setup": code_node("setup", SETUP, "intro"),
   "intro": {"name": "intro", "node_type": "conversation",
-    "on_enter": {"type": "tts", "text": "Hello, this is Freya Bank's digital assistant. This call is recorded. Am I speaking with {{title}} {{last_name}}?"},
+    "on_enter": {"type": "tts", "text": "Hello, this is Freya Bank's digital assistant. Please note that we record this call. Am I speaking with {{title}} {{last_name}}?"},
     "task_message": INTRO_TASK, "role_message": "", "interruptible": True, "max_node_turns": 80,
     "tools": [VERIFY, CALLBACK, TRANSFER, CLOSE],
     "transitions": [CLOSED_TR,

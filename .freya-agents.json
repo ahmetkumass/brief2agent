@@ -5,6 +5,7 @@
  },
  "brief-a": {
   "workflow_id": "e6c14f76-16aa-4576-93a9-91d95c7c0dac",
-  "agent_id": "952e00df-f01e-446e-8e4d-88bb49a0afea"
+  "agent_id": "952e00df-f01e-446e-8e4d-88bb49a0afea",
+  "version": 2
  }
 }

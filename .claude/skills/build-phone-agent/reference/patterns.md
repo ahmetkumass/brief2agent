@@ -169,6 +169,31 @@ except Exception as e:
     vars['facts_state'] = 'error'
 ```
 
+### Decision tables (the model looks up, never reasons)
+
+Practice runs failed when the model had a list of valid dates but still had to *decide* (a holiday inside the deadline was answered with a date a week later; the floor was offered twice). So the facts code also writes, per product, ready answers:
+
+```python
+    # per product p, with deadline dl (date) and today:
+    lines = []
+    for i in range(0, 46):
+        d = today + datetime.timedelta(days=i)
+        if d < today: continue
+        if d > dl: ans = 'AFTER DEADLINE -> say the latest possible date is ' + dl.isoformat() + ' and offer it'
+        elif is_bd(d): ans = 'ACCEPT ' + d.isoformat()
+        else:
+            nb = nth_bd_after(d, 1)
+            ans = ('NOT A BUSINESS DAY -> offer ' + nb.isoformat()) if nb <= dl else ('NOT A BUSINESS DAY, next business day is after the deadline -> offer ' + dl.isoformat())
+        lines.append(d.isoformat() + ' ' + NAMES[d.weekday()] + ': ' + ans)
+    date_table = '\n'.join(lines)
+    # amounts: one line per rule of the brief, with the numbers filled in
+    amount_text = 'Full ' + full_s + '. Floor ' + floor_s + '. If the customer names an amount >= ' + floor_s + ' and <= ' + full_s + ': ACCEPT that exact amount. Below ' + floor_s + ': say it cannot be recorded, offer ' + floor_s + ' once.'
+```
+
+Also write the persuasion ladder as numbered steps with the exact amounts/dates filled in ("STEP 1 ask: ...; if no -> STEP 2 offer <X> on <date> ONCE; if no -> STEP 3 ..."), and tell the model in the prompt: "Keep track of which STEP you are on; never repeat a step; an offer made once is never made again."
+
+Prompt rule: "When the customer names a date, find that date in DATE TABLE and do exactly what its line says. When they name an amount, apply AMOUNT RULES. Never compute."
+
 Amounts: format money as the brief does (2 decimals if needed), and give the amount the tool needs as a plain number.
 
 ## 5. Closing via tool + end node

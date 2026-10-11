@@ -67,8 +67,8 @@ export default {
       const url = new URL(req.url); const path = url.pathname.replace(/\/+$/, "");
       if (path === "" || path === "/" || path === BASE + "/health") return json({ ok: true, service: "bank mock" });
       // practice-style helpers: ledger read for self-tests
-      if (req.method === "GET" && path.startsWith(BASE + "/practice/ledger/")) { const id = path.split("/").pop(); return json({ ok: true, ...(await load(env, id)) }); }
-      if (req.method === "POST" && path === BASE + "/practice/sessions") {
+      if (req.method === "GET" && (path.startsWith(BASE + "/practice/ledger/") || path.startsWith("/v1/practice/ledger/"))) { const id = path.split("/").pop(); return json({ ok: true, ...(await load(env, id)) }); }
+      if (req.method === "POST" && (path === BASE + "/practice/sessions" || path === "/v1/practice/sessions")) {
         const b = await req.json().catch(() => ({})); const c = customer(b.case) || (DATA.customers || []).find(x => x.case === b.case);
         if (!c) return json({ ok: false, error: "unknown case" }, 404);
         await env.LEDGER.delete("l:" + (c.customer_id || c.id));

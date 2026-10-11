@@ -44,7 +44,9 @@ def persona_for(case, ident, style=None):
         who = f"You are {me}. " + " ".join(say.get(k, "Your " + k.replace("_", " ") + " is {}.").format(x) for k, x in i.items()) + " Give these only when asked, and give the wrong ones where the text below says so."
     style = style or case.get("style")
     text = PERSONA.format(who=who, script=case["script"]) + ("\n\n" + STYLES[style] if style else "")
-    return {"name": case["id"] + " " + case["title"] + (f" [{style}]" if style else ""), "prompt": text, "successCriteria": "All of these are true:\n- " + "\n- ".join(case["checks"]), "tags": ["hackathon", "brief-" + case["brief"]]}
+    if case.get("language"):                                       # a self-made case for a brief in another language
+        text += f"\n\nLANGUAGE: You speak only {case['language']}, like a native speaker, in every turn. Say dates, amounts and numbers the way a native {case['language']} speaker says them. If the caller reads something back and it matches, confirm in {case['language']}."
+    return {"name": case["id"] + " " + case["title"] + (f" [{style}]" if style else ""), "prompt": text, "successCriteria": "All of these are true:\n- " + "\n- ".join(case["checks"]), "tags": ["hackathon", "brief-" + str(case.get("brief", "final"))]}
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("agent_id"); ap.add_argument("--brief"); ap.add_argument("--cases", default=str(ROOT / "public-test-set.json")); ap.add_argument("--out"); ap.add_argument("--only"); ap.add_argument("--reps", type=int, default=1); ap.add_argument("--style", choices=sorted(STYLES)); ap.add_argument("--rerun-if-slow", type=int, default=0)

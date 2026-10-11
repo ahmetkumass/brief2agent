@@ -1,1 +1,3 @@
 {"at": "2026-10-11 18:52:34", "agent_id": "13462fba-0f6d-4ebb-923e-e59db5f586cd", "brief": "A", "runs": 1, "passed": 0, "total": 10, "seconds": 271, "failed": ["PUB-01", "PUB-02", "PUB-03", "PUB-04", "PUB-05", "PUB-06", "PUB-07", "PUB-08", "PUB-09", "PUB-10"]}
+{"at": "2026-10-11 19:02:10", "agent_id": "952e00df-f01e-446e-8e4d-88bb49a0afea", "brief": "A", "runs": 1, "passed": 7, "total": 10, "seconds": 136, "failed": ["PUB-06", "PUB-07", "PUB-10"]}
+{"at": "2026-10-11 19:05:40", "agent_id": "952e00df-f01e-446e-8e4d-88bb49a0afea", "brief": "A", "runs": 1, "passed": 10, "total": 10, "seconds": 138, "failed": []}
