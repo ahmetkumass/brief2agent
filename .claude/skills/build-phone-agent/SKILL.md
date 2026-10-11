@@ -57,6 +57,7 @@ Hard rules (each one comes from a failure seen in practice runs):
 - **Honesty.** Prompt + hook: only say "recorded/scheduled/transferred" after ok=true. After a tool result always speak or call the next tool, never an empty turn.
 - **Exact closing.** close_call is a model tool with `enum` on outcome and reason (from the brief's table). Its tool description lists the full table "use outcome X reason Y when ...". The farewell sentence is said in the same turn BEFORE calling close_call; a transition on `close_call_response.data.ok` (true/True) or `close_call_success_count > 0` goes to an end_call node with `message_mode: none`.
 - **Fixed lines as tts** where the brief quotes a sentence (opening, sympathy, mandatory confirmation sentence can be required in prompt "say exactly: ...").
+- **Date ladder and amount ladder are separate** (patterns.md section 4): a date objection keeps the full amount; the floor/partial is offered only after the customer says they cannot pay the full amount. No open "how much can you pay?" unless the brief asks for it. A side question (robot? scam?) is answered and does not move the ladder.
 - **Read-back + explicit confirmation before any write**, as the brief says; one promise per product; never change a recorded one.
 - **Identity:** normalise answers in a `pre_process_code` hook (dates → YYYY-MM-DD with the brief's day/month order; digits only; trim). Ask one question at a time. Respect the hint semantics the openapi describes (e.g. a swapped day/month hint is a free retry).
 - **Before verification** the model must not see debt details: do not put debt text into opening/identity prompts.
@@ -79,6 +80,7 @@ Hard rules (each one comes from a failure seen in practice runs):
 Final line exactly: `RESULT workflow_id=<id> agent_id=<id> nodes=<n> tools=<n> selftest=<e.g. 9/10 practice A>`.
 
 ## Never
+- Never reuse or copy files, workflows or agents of another slot (`work/<other>/`, `out/<other>.*`, `.freya-agents.json` entries of other slots). Build this slot fresh from its own corpus; save only under this slot.
 - Never edit the agent on the platform by hand. Change the file, save again.
 - Never put anything specific to a brief into files outside `out/`, `work/`, `results/`, `mock/`.
 - Never change `AGENT_LLM` in freya.py.

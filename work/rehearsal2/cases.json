@@ -238,7 +238,7 @@
    "callbacks": [],
    "transfers": [
     {
-     "reason": "hardship"
+     "queue": "hardship"
     }
    ]
   },

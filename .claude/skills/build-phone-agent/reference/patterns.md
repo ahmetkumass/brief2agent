@@ -194,6 +194,10 @@ Also write the persuasion ladder as numbered steps with the exact amounts/dates 
 
 Prompt rule: "When the customer names a date, find that date in DATE TABLE and do exactly what its line says. When they name an amount, apply AMOUNT RULES. Never compute."
 
+**Date objection ≠ amount objection** (seen in a stress run: the customer only said "my salary comes later", the agent dropped to the floor, asked "how much can you pay?" and recorded the floor instead of the full amount). Keep two separate ladders: a DATE ladder (customer's date → DATE TABLE → latest allowed date) and an AMOUNT ladder (full → floor/partial, only after the customer says they cannot pay the FULL AMOUNT). Prompt rules: "If the customer objects to the date, move only on the date ladder and keep the full amount. Offer a lower amount only after the customer clearly says they cannot pay the full amount on an allowed date. Never ask an open 'how much can you pay?' unless the brief tells you to; offer the exact amount from the ladder. A question in between (robot? who are you?) is answered and does NOT count as a refusal or move the ladder." Write the STEP list so that every step names both amount and date ("STEP 2: offer FULL <full> on <latest date>").
+
+**Spoken numbers.** Customers say amounts and dates in words, in pieces ("two hundred… fifty"), or correct themselves ("no, I mean 300"). Prompt rule: "The last amount/date the customer states wins. Read the exact number back in digits-as-words before any write; if the customer says the read-back is wrong, ask again." For Turkish, numbers come as words ("bin iki yüz elli", "yirmi üç Ekim"): the model normalises them to digits for the tool; the read-back repeats the number so a wrong parse is caught.
+
 Amounts: format money as the brief does (2 decimals if needed), and give the amount the tool needs as a plain number.
 
 ## 5. Closing via tool + end node

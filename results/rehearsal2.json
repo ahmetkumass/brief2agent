@@ -1,9 +1,9 @@
 {
  "agent_id": "5b1a71dd-6350-4a86-88fa-30158cc00e23",
- "simulation_id": "3c5fe297-09c0-4987-97ce-fadc255e3690",
- "iteration_id": "dcb15bb2-4d56-4653-a1c5-2d418cde3aeb",
- "seconds": 63,
- "passed": 5,
+ "simulation_id": "8067e9dd-254a-4097-89e0-0d794fcfd6f6",
+ "iteration_id": "43d31cc6-d8aa-43c7-917e-e91ef73e0afa",
+ "seconds": 53,
+ "passed": 6,
  "total": 6,
  "runs": 1,
  "final": [
@@ -38,9 +38,9 @@
   {
    "id": "AK-1005",
    "family": "Hardship",
-   "passes": 0,
+   "passes": 1,
    "runs": 1,
-   "pass": false
+   "pass": true
   },
   {
    "id": "AK-1006",
@@ -57,7 +57,7 @@
    "family": "Happy path",
    "pass": true,
    "failed": [],
-   "call_id": "0f69462d-0722-4847-8de0-0f153fe57b36",
+   "call_id": "27fa4636-a127-4270-8721-a0bc717a60cc",
    "tools": [
     "verify_identity",
     "verify_identity",
@@ -66,7 +66,7 @@
     "close_call"
    ],
    "customer_id": "AK-1001",
-   "slowest_turn_s": 1.7,
+   "slowest_turn_s": 1.3,
    "ended": "assistant-ended-call"
   },
   {
@@ -75,13 +75,13 @@
    "family": "Third party",
    "pass": true,
    "failed": [],
-   "call_id": "14cf9045-f537-47f4-8430-ce93a66ba58e",
+   "call_id": "fa47e13b-dd6a-4507-88c1-9731b507ecbd",
    "tools": [
     "schedule_callback",
     "close_call"
    ],
    "customer_id": "AK-1002",
-   "slowest_turn_s": 5.8,
+   "slowest_turn_s": 0.9,
    "ended": "assistant-ended-call"
   },
   {
@@ -90,7 +90,7 @@
    "family": "Identity",
    "pass": true,
    "failed": [],
-   "call_id": "271d35ab-3276-4cc9-aab3-bfd62222bb1e",
+   "call_id": "4a195957-de28-4f8f-b732-77fae08486fb",
    "tools": [
     "verify_identity",
     "verify_identity",
@@ -98,7 +98,7 @@
     "close_call"
    ],
    "customer_id": "AK-1003",
-   "slowest_turn_s": 3.6,
+   "slowest_turn_s": 1.2,
    "ended": "assistant-ended-call"
   },
   {
@@ -107,7 +107,7 @@
    "family": "Dates",
    "pass": true,
    "failed": [],
-   "call_id": "24227e65-33b0-4893-b878-d6623036690f",
+   "call_id": "59c4cb2f-f957-473b-b0eb-3af4ce7f1623",
    "tools": [
     "verify_identity",
     "verify_identity",
@@ -116,19 +116,16 @@
     "close_call"
    ],
    "customer_id": "AK-1004",
-   "slowest_turn_s": 4.1,
+   "slowest_turn_s": 4.9,
    "ended": "assistant-ended-call"
   },
   {
    "id": "AK-1005",
    "level": "medium",
    "family": "Hardship",
-   "pass": false,
-   "failed": [
-    "notes [('None', 'M\u00fc\u015fteri i\u015fini kaybetti, \u00f6deme g\u00fc\u00e7l\u00fc\u011f\u00fc \u00e7ekiyor.')], expected [('None', 'None')]",
-    "transfers [{'queue': 'hardship'}], expected [{'reason': 'hardship'}]"
-   ],
-   "call_id": "91a9c8e0-08ae-4539-9d4c-b4f092d62958",
+   "pass": true,
+   "failed": [],
+   "call_id": "3b8231e3-4c5a-4e13-8b5c-ee6364219a00",
    "tools": [
     "verify_identity",
     "verify_identity",
@@ -138,7 +135,7 @@
     "close_call"
    ],
    "customer_id": "AK-1005",
-   "slowest_turn_s": 2.2,
+   "slowest_turn_s": 1.8,
    "ended": "assistant-ended-call"
   },
   {
@@ -147,7 +144,7 @@
    "family": "Tool error",
    "pass": true,
    "failed": [],
-   "call_id": "e7af9ab4-b0d4-480a-8026-30898b5f2fbf",
+   "call_id": "4dc8eb46-fbc2-4573-9473-71bd95cd32db",
    "tools": [
     "verify_identity",
     "verify_identity",
@@ -158,7 +155,7 @@
     "close_call"
    ],
    "customer_id": "AK-1006",
-   "slowest_turn_s": 5.3,
+   "slowest_turn_s": 2.9,
    "ended": "assistant-ended-call"
   }
  ],
@@ -170,7 +167,7 @@
     "family": "Happy path",
     "pass": true,
     "failed": [],
-    "call_id": "0f69462d-0722-4847-8de0-0f153fe57b36",
+    "call_id": "27fa4636-a127-4270-8721-a0bc717a60cc",
     "tools": [
      "verify_identity",
      "verify_identity",
@@ -179,7 +176,7 @@
      "close_call"
     ],
     "customer_id": "AK-1001",
-    "slowest_turn_s": 1.7,
+    "slowest_turn_s": 1.3,
     "ended": "assistant-ended-call"
    },
    {
@@ -188,13 +185,13 @@
     "family": "Third party",
     "pass": true,
     "failed": [],
-    "call_id": "14cf9045-f537-47f4-8430-ce93a66ba58e",
+    "call_id": "fa47e13b-dd6a-4507-88c1-9731b507ecbd",
     "tools": [
      "schedule_callback",
      "close_call"
     ],
     "customer_id": "AK-1002",
-    "slowest_turn_s": 5.8,
+    "slowest_turn_s": 0.9,
     "ended": "assistant-ended-call"
    },
    {
@@ -203,7 +200,7 @@
     "family": "Identity",
     "pass": true,
     "failed": [],
-    "call_id": "271d35ab-3276-4cc9-aab3-bfd62222bb1e",
+    "call_id": "4a195957-de28-4f8f-b732-77fae08486fb",
     "tools": [
      "verify_identity",
      "verify_identity",
@@ -211,7 +208,7 @@
      "close_call"
     ],
     "customer_id": "AK-1003",
-    "slowest_turn_s": 3.6,
+    "slowest_turn_s": 1.2,
     "ended": "assistant-ended-call"
    },
    {
@@ -220,7 +217,7 @@
     "family": "Dates",
     "pass": true,
     "failed": [],
-    "call_id": "24227e65-33b0-4893-b878-d6623036690f",
+    "call_id": "59c4cb2f-f957-473b-b0eb-3af4ce7f1623",
     "tools": [
      "verify_identity",
      "verify_identity",
@@ -229,19 +226,16 @@
      "close_call"
     ],
     "customer_id": "AK-1004",
-    "slowest_turn_s": 4.1,
+    "slowest_turn_s": 4.9,
     "ended": "assistant-ended-call"
    },
    {
     "id": "AK-1005",
     "level": "medium",
     "family": "Hardship",
-    "pass": false,
-    "failed": [
-     "notes [('None', 'M\u00fc\u015fteri i\u015fini kaybetti, \u00f6deme g\u00fc\u00e7l\u00fc\u011f\u00fc \u00e7ekiyor.')], expected [('None', 'None')]",
-     "transfers [{'queue': 'hardship'}], expected [{'reason': 'hardship'}]"
-    ],
-    "call_id": "91a9c8e0-08ae-4539-9d4c-b4f092d62958",
+    "pass": true,
+    "failed": [],
+    "call_id": "3b8231e3-4c5a-4e13-8b5c-ee6364219a00",
     "tools": [
      "verify_identity",
      "verify_identity",
@@ -251,7 +245,7 @@
      "close_call"
     ],
     "customer_id": "AK-1005",
-    "slowest_turn_s": 2.2,
+    "slowest_turn_s": 1.8,
     "ended": "assistant-ended-call"
    },
    {
@@ -260,7 +254,7 @@
     "family": "Tool error",
     "pass": true,
     "failed": [],
-    "call_id": "e7af9ab4-b0d4-480a-8026-30898b5f2fbf",
+    "call_id": "4dc8eb46-fbc2-4573-9473-71bd95cd32db",
     "tools": [
      "verify_identity",
      "verify_identity",
@@ -271,7 +265,7 @@
      "close_call"
     ],
     "customer_id": "AK-1006",
-    "slowest_turn_s": 5.3,
+    "slowest_turn_s": 2.9,
     "ended": "assistant-ended-call"
    }
   ]

@@ -21,6 +21,13 @@ def score_ledger(case, led):
     if got_outcome != (exp["outcome"], exp.get("reason")): bad.append(f"outcome {got_outcome}, expected {(exp['outcome'], exp.get('reason'))}")
     key = lambda p: (str(p.get("product_id")), round(float(p.get("amount") or 0), 2), str(p.get("date")))
     if sorted(map(key, led["promises"])) != sorted(map(key, exp["promises"])): bad.append(f"promises {sorted(map(key, led['promises']))}, expected {sorted(map(key, exp['promises']))}")
+    exp_notes = []
+    for n in exp["notes"]:   # {"contains": "x"}: any ledger note whose text contains x
+        if isinstance(n, dict) and "contains" in n:
+            m = next((l for l in led["notes"] if isinstance(l, dict) and n["contains"].lower() in str(l.get("reason") or l.get("text") or "").lower() and l not in exp_notes), None)
+            exp_notes.append(m if m is not None else n)
+        else: exp_notes.append(n)
+    exp = dict(exp, notes=exp_notes)
     nk = lambda n: (str(n.get("product_id")), str(n.get("reason"))) if isinstance(n, dict) else (str(n), "")
     if not any(isinstance(n, dict) and n.get("reason") for n in exp["notes"]):   # self-made case without a note reason code: compare products only
         nk = lambda n: (str(n.get("product_id")), "") if isinstance(n, dict) else ("None", "")

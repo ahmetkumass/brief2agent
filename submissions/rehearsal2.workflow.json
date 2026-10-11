@@ -1,0 +1,1067 @@
+{
+ "workflow_id": "ac5479cd-a65e-4f21-ab9f-e25da31a8f5b",
+ "agent_id": "5b1a71dd-6350-4a86-88fa-30158cc00e23",
+ "updated_at": "2026-10-11T16:29:22.141Z",
+ "workflow": {
+  "nodes": {
+   "facts": {
+    "name": "facts",
+    "tools": [],
+    "on_enter": {
+     "type": "silent"
+    },
+    "node_type": "code",
+    "assertions": [],
+    "passthrough": true,
+    "pre_actions": [
+     {
+      "type": "function",
+      "function": {
+       "name": "code_exec",
+       "handler": "__function__:code_exec",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "code": {
+          "type": "string",
+          "default": "import datetime\nHOLIDAYS = dict([('2026-10-29', 'Cumhuriyet Bayram\u0131'), ('2027-01-01', 'Y\u0131lba\u015f\u0131')])\nNAMES = ['Pazartesi','Sal\u0131','\u00c7ar\u015famba','Per\u015fembe','Cuma','Cumartesi','Pazar']\nMONTHS = ['Ocak','\u015eubat','Mart','Nisan','May\u0131s','Haziran','Temmuz','A\u011fustos','Eyl\u00fcl','Ekim','Kas\u0131m','Aral\u0131k']\ndef is_bd(d):\n    return d.weekday() < 5 and d.isoformat() not in HOLIDAYS\ndef nth_bd_after(d, n):\n    c, k = d, 0\n    while k < n:\n        c = c + datetime.timedelta(days=1)\n        if is_bd(c):\n            k += 1\n    return c\ndef spoken(d):\n    return str(d.day) + ' ' + MONTHS[d.month - 1] + ' ' + NAMES[d.weekday()]\ndef money(x):\n    x = float(x)\n    if abs(x - round(x)) < 0.005:\n        s = format(int(round(x)), ',').replace(',', '.')\n    else:\n        s = format(x, ',.2f').replace(',', 'X').replace('.', ',').replace('X', '.')\n    return s + ' TL'\ndef num(x):\n    x = float(x)\n    return str(int(round(x))) if abs(x - round(x)) < 0.005 else ('%.2f' % x)\nimport json, ast\ntry:\n    def load(v):\n        if isinstance(v, list):\n            return v\n        if isinstance(v, str) and v.strip():\n            for f in (json.loads, ast.literal_eval):\n                try:\n                    x = f(v)\n                    if isinstance(x, list):\n                        return x\n                except Exception:\n                    pass\n        return None\n    prods = load(vars.get('products'))\n    if prods is None:\n        prods = []\n        for prefix in ('load_account_response.data.products.', 'get_account_response.data.products.'):\n            i = 0\n            while (prefix + str(i) + '.product_id') in vars:\n                p = dict()\n                for k in ('product_id','card_last4','past_due','days_late','minimum_payment'):\n                    kk = prefix + str(i) + '.' + k\n                    if kk in vars:\n                        p[k] = vars[kk]\n                prods.append(p)\n                i += 1\n            if prods:\n                break\n    today = datetime.date.fromisoformat(str(vars.get('now'))[:10])\n    debt = []\n    plans = []\n    for idx, p in enumerate(prods):\n        pid = str(p.get('product_id'))\n        l4 = str(p.get('card_last4'))\n        pdue = float(p.get('past_due') or 0)\n        mn = float(p.get('minimum_payment') or 0)\n        dlate = int(float(p.get('days_late') or 0))\n        nbd = 5 if dlate <= 30 else 2\n        dl = nth_bd_after(today, nbd)\n        debt.append('KART ' + str(idx + 1) + ': sonu ' + l4 + ' ile biten kart, gecikmi\u015f bor\u00e7 ' + money(pdue) + ' (product_id=' + pid + ').')\n        lines = []\n        for i in range(0, 46):\n            d = today + datetime.timedelta(days=i)\n            if d > dl:\n                ans = 'SON TAR\u0130HTEN SONRA -> kabul etme; en ge\u00e7 ' + spoken(dl) + ' (' + dl.isoformat() + ') oldu\u011funu s\u00f6yle ve onu \u00f6ner'\n            elif d == today and not is_bd(d):\n                ans = 'i\u015f g\u00fcn\u00fc de\u011fil -> ' + nth_bd_after(d, 1).isoformat() + ' \u00f6ner'\n            elif is_bd(d):\n                ans = 'KABUL ' + d.isoformat()\n            else:\n                why = ('resmi tatil (' + HOLIDAYS[d.isoformat()] + ')') if d.isoformat() in HOLIDAYS else 'hafta sonu'\n                opts = []\n                c = d\n                while len(opts) < 2:\n                    c = c + datetime.timedelta(days=1)\n                    if c > dl:\n                        break\n                    if is_bd(c):\n                        opts.append(c)\n                prev = d - datetime.timedelta(days=1)\n                while prev >= today and not is_bd(prev):\n                    prev = prev - datetime.timedelta(days=1)\n                if not opts and prev >= today:\n                    opts = [prev]\n                ans = why + ', i\u015f g\u00fcn\u00fc de\u011fil -> s\u00f6yle ve ' + ' veya '.join([spoken(o) + ' (' + o.isoformat() + ')' for o in opts]) + ' \u00f6ner'\n            lines.append('  ' + d.isoformat() + ' ' + spoken(d) + ': ' + ans)\n        plans.append('KART ' + str(idx + 1) + ' (sonu ' + l4 + ', product_id=' + pid + '):\\n'\n            + '  Gecikme ' + str(dlate) + ' g\u00fcn -> en ge\u00e7 s\u00f6z tarihi ' + str(nbd) + ' i\u015f g\u00fcn\u00fc: SON TAR\u0130H ' + spoken(dl) + ' (' + dl.isoformat() + ').\\n'\n            + '  TUTAR KURALI: tam bor\u00e7 ' + money(pdue) + ', asgari \u00f6deme (TABAN) ' + money(mn) + '. ' + num(mn) + ' ile ' + num(pdue) + ' aras\u0131ndaki (dahil) her tutar KABUL (aynen o tutar). ' + num(mn) + ' alt\u0131 KABUL ED\u0130LMEZ: asgari \u00f6demenin ' + money(mn) + ' oldu\u011funu s\u00f6yle. ' + num(pdue) + ' \u00fcst\u00fc kabul edilmez.\\n'\n            + '  \u0130LK SORU: \"Sonu ' + l4 + ' ile biten kart\u0131n\u0131zda ' + money(pdue) + ' gecikmi\u015f bor\u00e7 var. En ge\u00e7 ' + spoken(dl) + ' tarihine kadar \u00f6deyebilir misiniz?\"\\n'\n            + '  \u0130KNA 1 (bir kez): gecikme faizi i\u015fledi\u011fini ve gecikmenin kay\u0131tlara ge\u00e7ti\u011fini k\u0131saca s\u00f6yle, en ge\u00e7 ' + spoken(dl) + ' tarihini \u00f6ner.\\n'\n            + '  \u0130KNA 2 (bir kez): k\u0131smi \u00f6deme \u00f6ner: asgari ' + money(mn) + ', en ge\u00e7 ' + spoken(dl) + ' tarihine kadar.\\n'\n            + '  H\u00e2l\u00e2 hay\u0131r -> bu kart i\u00e7in s\u00f6z yok (refused).\\n'\n            + '  TAR\u0130H TABLOSU:\\n' + '\\n'.join(lines))\n    vars['debt_text'] = '\\n'.join(debt) if debt else 'Hesap bilgisi al\u0131namad\u0131.'\n    vars['plan_text'] = '\\n\\n'.join(plans)\n    vars['n_products'] = str(len(prods))\n    vars['facts_state'] = 'ok' if prods else 'empty'\nexcept Exception as e:\n    vars['debt_text'] = 'Hesap bilgisi al\u0131namad\u0131.'\n    vars['plan_text'] = ''\n    vars['facts_state'] = 'error'\n"
+         },
+         "timeout_ms": {
+          "type": "number",
+          "default": 10000
+         }
+        }
+       },
+       "description": ""
+      }
+     }
+    ],
+    "transitions": [
+     {
+      "condition": {
+       "mode": "exact",
+       "operator": "always"
+      },
+      "description": "always",
+      "target_node": "negotiate"
+     }
+    ],
+    "role_message": "",
+    "task_message": "",
+    "interruptible": true,
+    "max_node_turns": null,
+    "response_mapping": [],
+    "extraction_schema": [],
+    "max_turn_transition": null,
+    "truncation_strategy": "keep_all",
+    "suppress_tool_results": false,
+    "truncation_window_size": 10,
+    "on_enter_first_entry_only": false,
+    "disable_inactivity_monitor": true,
+    "passthrough_default_transition": "negotiate",
+    "return_to_previous_on_interrupt": false
+   },
+   "intro": {
+    "name": "intro",
+    "tools": [
+     {
+      "type": "function",
+      "config": {
+       "timeoutMs": 12000,
+       "maxRetries": 0
+      },
+      "function": {
+       "name": "verify_identity",
+       "handler": "__function__:api_call",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "url": {
+          "type": "string",
+          "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/verify_identity"
+         },
+         "body": {
+          "type": "object",
+          "required": [
+           "field",
+           "answer"
+          ],
+          "properties": {
+           "field": {
+            "enum": [
+             "birth_year",
+             "postcode"
+            ],
+            "type": "string",
+            "default": "{{field}}",
+            "description": "birth_year veya postcode"
+           },
+           "answer": {
+            "type": "string",
+            "default": "{{answer}}",
+            "description": "Sadece rakamlar."
+           },
+           "customer_id": {
+            "type": "string",
+            "default": "{{customer_id}}"
+           }
+          }
+         },
+         "method": {
+          "type": "string",
+          "default": "POST"
+         },
+         "headers": {
+          "type": "object",
+          "properties": {
+           "Content-Type": {
+            "type": "string",
+            "default": "application/json"
+           }
+          }
+         }
+        }
+       },
+       "description": "M\u00fc\u015fteri bir g\u00fcvenlik sorusunu cevaplad\u0131\u011f\u0131nda HER SEFER\u0130NDE, o tek cevapla \u00e7a\u011f\u0131r. field: birth_year (do\u011fum y\u0131l\u0131, 4 hane) veya postcode (posta kodu, 5 hane). answer: sadece rakamlar (\"bin dokuz y\u00fcz seksen be\u015f\" -> 1985; \"otuz d\u00f6rt yedi y\u00fcz on\" -> 34710; ba\u015ftaki 0 korunur: \"s\u0131f\u0131r alt\u0131 be\u015f y\u00fcz yirmi\" -> 06520)."
+      },
+      "pre_process_code": "import re\ntry:\n    b = config.get('body')\n    if isinstance(b, dict):\n        a = str(b.get('answer') or '').strip()\n        dg = re.sub('[^0-9]', '', a)\n        b['answer'] = dg if dg else a\nexcept Exception:\n    pass\n",
+      "post_process_code": "try:\n    if isinstance(result, dict):\n        result.pop('header', None)\n        d = result.get('data')\n        if not isinstance(d, dict):\n            d = dict()\n            result['data'] = d\n        sc = 500\n        try:\n            sc = int(result.get('status_code', 200) or 200)\n        except Exception:\n            sc = 200\n        failed = d.get('ok') is False or sc >= 500 or (result.get('status') not in (None, 'success'))\n        fld = ''\n        try:\n            fld = str(config.get('body', dict()).get('field') or '')\n        except Exception:\n            fld = ''\n        if d.get('identity_complete') is True or str(d.get('identity_complete')) in ('true', 'True'):\n            vars['id_state'] = 'verified'\n            d['what_to_do_next'] = 'Kimlik do\u011fruland\u0131. Sadece \"Te\u015fekk\u00fcrler.\" de; hesap bilgisi sonra y\u00fcklenecek.'\n        elif sc >= 500 or (d.get('ok') is not True and d.get('ok') is not False and not d):\n            d['what_to_do_next'] = 'Sistem hatas\u0131, cevap kontrol edilemedi (yanl\u0131\u015f say\u0131lmaz). Ayn\u0131 cevapla verify_identity arac\u0131n\u0131 bir kez daha \u00e7a\u011f\u0131r.'\n        elif d.get('ok') is False:\n            d['what_to_do_next'] = 'Cevap anla\u015f\u0131lamad\u0131 (yanl\u0131\u015f say\u0131lmaz). M\u00fc\u015fteriden ayn\u0131 bilgiyi rakamlarla tekrar s\u00f6ylemesini iste (do\u011fum y\u0131l\u0131 4 hane, posta kodu 5 hane).'\n        elif d.get('verified') is True:\n            if fld:\n                vars['ok_' + fld] = 'yes'\n            nxt = 'posta kodunuzu' if not vars.get('ok_postcode') else 'do\u011fum y\u0131l\u0131n\u0131z\u0131'\n            d['what_to_do_next'] = 'Bu cevap do\u011fru. \u015eimdi sor: \"Te\u015fekk\u00fcrler. ' + nxt + ' s\u00f6yler misiniz?\"'\n        else:\n            left = d.get('attempts_remaining')\n            try:\n                left = int(left)\n            except Exception:\n                left = 1\n            if left <= 0:\n                vars['id_state'] = 'failed'\n                d['what_to_do_next'] = 'Kimlik do\u011frulanamad\u0131 (3 yanl\u0131\u015f). Hesap hakk\u0131nda H\u0130\u00c7B\u0130R bilgi verme. Ayn\u0131 turda: \"Bilgiler e\u015fle\u015fmedi\u011fi i\u00e7in g\u00f6r\u00fc\u015fmeye devam edemiyorum. \u0130yi g\u00fcnler dilerim.\" de ve close_call \u00e7a\u011f\u0131r: outcome=not_verified, reason=failed_identity.'\n            else:\n                other = 'postcode' if fld == 'birth_year' else 'birth_year'\n                ask = other if not vars.get('ok_' + other) else fld\n                q = 'posta kodunuzu' if ask == 'postcode' else 'do\u011fum y\u0131l\u0131n\u0131z\u0131'\n                d['what_to_do_next'] = 'Bu cevap e\u015fle\u015fmedi (kalan hak ' + str(left) + '). Hesap bilgisi verme. \u015eimdi sor: \"Bilgi e\u015fle\u015fmedi. ' + q + ' s\u00f6yler misiniz?\"'\nexcept Exception:\n    pass\n"
+     },
+     {
+      "type": "function",
+      "config": {
+       "timeoutMs": 12000,
+       "maxRetries": 0
+      },
+      "function": {
+       "name": "schedule_callback",
+       "handler": "__function__:api_call",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "url": {
+          "type": "string",
+          "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/schedule_callback"
+         },
+         "body": {
+          "type": "object",
+          "required": [
+           "callback_date",
+           "callback_time"
+          ],
+          "properties": {
+           "customer_id": {
+            "type": "string",
+            "default": "{{customer_id}}"
+           },
+           "callback_date": {
+            "type": "string",
+            "default": "{{callback_date}}",
+            "description": "YYYY-MM-DD"
+           },
+           "callback_time": {
+            "type": "string",
+            "default": "{{callback_time}}",
+            "description": "HH:MM"
+           }
+          }
+         },
+         "method": {
+          "type": "string",
+          "default": "POST"
+         },
+         "headers": {
+          "type": "object",
+          "properties": {
+           "Content-Type": {
+            "type": "string",
+            "default": "application/json"
+           }
+          }
+         }
+        }
+       },
+       "description": "\u00dc\u00e7\u00fcnc\u00fc ki\u015fi m\u00fc\u015fterinin ula\u015f\u0131labilece\u011fi bir g\u00fcn+saat verdi\u011finde ve bu GER\u0130 ARAMA PENCERES\u0130 i\u00e7indeyse \u00e7a\u011f\u0131r. callback_date YYYY-MM-DD, callback_time HH:MM (24 saat)."
+      },
+      "post_process_code": "try:\n    if isinstance(result, dict):\n        result.pop('header', None)\n        d = result.get('data')\n        if not isinstance(d, dict):\n            d = dict()\n            result['data'] = d\n        sc = 500\n        try:\n            sc = int(result.get('status_code', 200) or 200)\n        except Exception:\n            sc = 200\n        failed = d.get('ok') is False or sc >= 500 or (result.get('status') not in (None, 'success'))\n        if failed:\n            d['what_to_do_next'] = \"Geri arama PLANLANAMADI (saat pencere d\u0131\u015f\u0131 olabilir). Planland\u0131 deme. Pencere d\u0131\u015f\u0131ysa bir kez 09:30-18:30 aras\u0131 ba\u015fka saat iste (GER\u0130 ARAMA PENCERES\u0130). \u0130kinci kez de olmazsa vedala\u015f ve close_call: outcome=not_reached, reason=no_callback.\"\n        else:\n            d['what_to_do_next'] = \"Geri arama planland\u0131. Te\u015fekk\u00fcr edip vedala\u015f (\\\"Te\u015fekk\u00fcr ederim, iyi g\u00fcnler.\\\") ve ayn\u0131 turda close_call \u00e7a\u011f\u0131r: outcome=not_reached, reason=callback.\"\nexcept Exception:\n    pass\n"
+     },
+     {
+      "type": "function",
+      "config": {
+       "timeoutMs": 12000,
+       "maxRetries": 0
+      },
+      "function": {
+       "name": "close_call",
+       "handler": "__function__:api_call",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "url": {
+          "type": "string",
+          "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/close_call"
+         },
+         "body": {
+          "type": "object",
+          "required": [
+           "outcome"
+          ],
+          "properties": {
+           "reason": {
+            "enum": [
+             "hardship",
+             "dispute",
+             "refused",
+             "customer_hangup",
+             "system_error",
+             "failed_identity",
+             "callback",
+             "no_callback",
+             "wrong_number",
+             "deceased",
+             "unclear"
+            ],
+            "type": "string",
+            "default": "{{reason}}",
+            "description": "promise ve paid d\u0131\u015f\u0131nda zorunlu"
+           },
+           "outcome": {
+            "enum": [
+             "promise",
+             "paid",
+             "transferred",
+             "no_promise",
+             "not_verified",
+             "not_reached"
+            ],
+            "type": "string",
+            "default": "{{outcome}}",
+            "description": "Tabloya g\u00f6re"
+           },
+           "customer_id": {
+            "type": "string",
+            "default": "{{customer_id}}"
+           }
+          }
+         },
+         "method": {
+          "type": "string",
+          "default": "POST"
+         },
+         "headers": {
+          "type": "object",
+          "properties": {
+           "Content-Type": {
+            "type": "string",
+            "default": "application/json"
+           }
+          }
+         }
+        }
+       },
+       "description": "Araman\u0131n sonucunu kaydet. HER ZAMAN son ara\u00e7 \u00e7a\u011fr\u0131s\u0131, tam bir kez, vedala\u015fma c\u00fcmlesiyle ayn\u0131 turda. TABLO: promise (reason yok) = en az bir s\u00f6z create_promise ok=true ile kaydedildi. paid (reason yok) = m\u00fc\u015fteri zaten \u00f6dedi\u011fini s\u00f6yledi ve add_note yaz\u0131ld\u0131. transferred + hardship / dispute = transfer_to_agent ba\u015far\u0131l\u0131 oldu. no_promise + refused = do\u011frulanm\u0131\u015f, 2 ikna denemesinden sonra h\u00e2l\u00e2 s\u00f6z yok; no_promise + customer_hangup = do\u011frulanm\u0131\u015f m\u00fc\u015fteri s\u00f6z vermeden kapatmak istedi; no_promise + system_error = create_promise iki kez ba\u015far\u0131s\u0131z (add_note sonras\u0131). not_verified + failed_identity = 3 yanl\u0131\u015f g\u00fcvenlik cevab\u0131. not_reached + callback = schedule_callback ba\u015far\u0131l\u0131; no_callback = pencere d\u0131\u015f\u0131 saat iki kez / saat verilmedi; wrong_number = yanl\u0131\u015f numara; deceased = m\u00fc\u015fteri vefat etmi\u015f; unclear = iki soruda da do\u011fru ki\u015fi teyit edilemedi."
+      },
+      "pre_process_code": "try:\n    b = config.get('body')\n    if isinstance(b, dict):\n        if str(b.get('outcome')) in ('promise', 'paid'):\n            b.pop('reason', None)\n        elif not b.get('reason') or '{' in str(b.get('reason')):\n            b.pop('reason', None)\nexcept Exception:\n    pass\n",
+      "post_process_code": "try:\n    if isinstance(result, dict):\n        result.pop('header', None)\n        d = result.get('data')\n        if not isinstance(d, dict):\n            d = dict()\n            result['data'] = d\n        sc = 500\n        try:\n            sc = int(result.get('status_code', 200) or 200)\n        except Exception:\n            sc = 200\n        failed = d.get('ok') is False or sc >= 500 or (result.get('status') not in (None, 'success'))\n        if failed and str(d.get('error') or '') != 'call_closed':\n            d['what_to_do_next'] = 'Kapatma i\u015flenmedi. close_call arac\u0131n\u0131 ayn\u0131 de\u011ferlerle bir kez daha \u00e7a\u011f\u0131r.'\n        else:\n            vars['closed'] = 'yes'\n            d['what_to_do_next'] = 'Arama kapand\u0131. Ba\u015fka hi\u00e7bir \u015fey s\u00f6yleme veya \u00e7a\u011f\u0131rma.'\nexcept Exception:\n    pass\n"
+     }
+    ],
+    "on_enter": {
+     "text": "Anadolu Kart Bank'tan arayan dijital asistan\u0131m, g\u00f6r\u00fc\u015fme kay\u0131t alt\u0131na al\u0131nmaktad\u0131r. {{unvan}} {{soyad}} ile mi g\u00f6r\u00fc\u015f\u00fcyorum?",
+     "type": "tts"
+    },
+    "node_type": "conversation",
+    "assertions": [],
+    "passthrough": false,
+    "pre_actions": [],
+    "transitions": [
+     {
+      "condition": {
+       "logic": "or",
+       "conditions": [
+        {
+         "mode": "exact",
+         "operand": "yes",
+         "operator": "equals",
+         "variable": "closed"
+        },
+        {
+         "mode": "exact",
+         "operand": 0,
+         "operator": "greater_than",
+         "variable": "close_call_success_count"
+        }
+       ]
+      },
+      "description": "The call was closed",
+      "target_node": "goodbye"
+     },
+     {
+      "condition": {
+       "logic": "or",
+       "conditions": [
+        {
+         "mode": "exact",
+         "operand": "verified",
+         "operator": "equals",
+         "variable": "id_state"
+        },
+        {
+         "mode": "exact",
+         "operand": "true",
+         "operator": "equals",
+         "variable": "verify_identity_response.data.identity_complete"
+        },
+        {
+         "mode": "exact",
+         "operand": "True",
+         "operator": "equals",
+         "variable": "verify_identity_response.data.identity_complete"
+        }
+       ]
+      },
+      "description": "Both questions passed",
+      "target_node": "load_account"
+     }
+    ],
+    "role_message": "Sen Anadolu Kart Bank'\u0131n dijital asistan\u0131s\u0131n; kay\u0131tl\u0131 bir giden telefon aramas\u0131ndas\u0131n. SADECE T\u00fcrk\u00e7e konu\u015f. Her turda bir-iki k\u0131sa c\u00fcmle, tek seferde tek soru. M\u00fc\u015fteriye \"{{unvan}} {{soyad}}\" diye hitap et (\u00f6r. \"Bay Y\u0131lmaz\").\nTarihleri do\u011fal T\u00fcrk\u00e7e s\u00f6yle (\u00f6r. \"20 Ekim Sal\u0131\"), tutarlar\u0131 \"4.800 TL\" gibi.\nHer ara\u00e7 sonucundan sonra what_to_do_next talimat\u0131na uy; sonra m\u00fc\u015fteriyle konu\u015f veya s\u0131radaki arac\u0131 \u00e7a\u011f\u0131r. Asla bo\u015f tur b\u0131rakma.\nBir i\u015flem ara\u00e7 ok=true d\u00f6nmeden \"kaydedildi / planland\u0131 / aktar\u0131ld\u0131\" deme. Rakam, tarih, neden uydurma.\nRobot/yapay zeka sorulursa: Anadolu Kart Bank'\u0131n dijital asistan\u0131 oldu\u011funu s\u00f6yle ve devam et.\nArama bitti\u011finde: TEK turda te\u015fekk\u00fcr edip vedala\u015f VE close_call \u00e7a\u011f\u0131r (tam bir kez, her zaman son ara\u00e7 \u00e7a\u011fr\u0131s\u0131).\n",
+    "task_message": "A\u015eAMA: a\u00e7\u0131l\u0131\u015f ve kimlik do\u011frulama. Hesap hakk\u0131nda H\u0130\u00c7B\u0130R \u015eEY bilmiyorsun.\nYASAK S\u00d6ZC\u00dcKLER (do\u011frulamadan \u00f6nce, herkese, \u00fc\u00e7\u00fcnc\u00fc ki\u015filer dahil): \"bor\u00e7\", \"ekstre\", \"gecikme\", \"tahsilat\", \"kart\", \"\u00f6deme\" (banka ad\u0131 \"Anadolu Kart Bank\" hari\u00e7). Tutar, \u00fcr\u00fcn, arama nedeni s\u00f6yleme. Ne i\u00e7in arad\u0131\u011f\u0131n\u0131 sorarlarsa: \"Kendisiyle \u00f6zel bir konuda g\u00f6r\u00fc\u015fmem gerekiyor.\" (m\u00fc\u015fteriye ise: \"G\u00fcvenlik do\u011frulamas\u0131ndan sonra bilgi verebilirim.\").\n\nA\u00e7\u0131l\u0131\u015f zaten s\u00f6ylendi: \"Anadolu Kart Bank'tan arayan dijital asistan\u0131m, g\u00f6r\u00fc\u015fme kay\u0131t alt\u0131na al\u0131nmaktad\u0131r. {{unvan}} {{soyad}} ile mi g\u00f6r\u00fc\u015f\u00fcyorum?\"\n\nA. HATTAK\u0130 K\u0130\u015e\u0130\n- ONAY sadece: \"evet\", \"benim\", \"buyurun benim\" ya da kendi ad\u0131n\u0131 ({{ad}} / {{soyad}}) s\u00f6ylemesi. \"Alo\", \"buyurun\", \"kimsiniz\", \"efendim\" ONAY DE\u011e\u0130L: varsa sorusunu k\u0131saca cevapla ve bir kez daha sor: \"{{unvan}} {{soyad}} ile mi g\u00f6r\u00fc\u015f\u00fcyorum?\". \u0130kinci soruda da net onay yoksa: vedala\u015f ve close_call(not_reached, unclear).\n- Robot/yapay zeka m\u0131s\u0131n sorusu: \"Evet, Anadolu Kart Bank'\u0131n dijital asistan\u0131y\u0131m.\" de ve devam et.\n- YANLI\u015e NUMARA (\"burada \u00f6yle biri yok\", \"yanl\u0131\u015f numara\"): \u00f6z\u00fcr dile, vedala\u015f, close_call(not_reached, wrong_number).\n- VEFAT (m\u00fc\u015fteri vefat etti): AYNEN \"Ba\u015f\u0131n\u0131z sa\u011folsun.\" de, ba\u015fka hi\u00e7bir \u015fey sorma, ayn\u0131 turda close_call(not_reached, deceased).\n- BA\u015eKASI A\u00c7TI (e\u015fi, yak\u0131n\u0131, \"o burada de\u011fil\"): arama nedenini S\u00d6YLEME, g\u00fcvenlik sorusu sorma, bilgi verme. Sor: \"Kendisine ne zaman ula\u015fabiliriz?\"\n  {{cb_text}}\n  Verilen g\u00fcn+saat pencere \u0130\u00c7\u0130NDEYSE: \u00f6nce H\u0130\u00c7B\u0130R \u015eEY S\u00d6YLEMEDEN schedule_callback(callback_date YYYY-MM-DD, callback_time HH:MM) \u00e7a\u011f\u0131r (\"yar\u0131n saat 12\" -> 12:00; \"\u00f6\u011fleden sonra 3\" -> 15:00). Ara\u00e7 sonucu gelmeden \"olu\u015fturuyorum/planl\u0131yorum/not ald\u0131m\" deme. ok=true sonras\u0131: \"Te\u015fekk\u00fcr ederim, o saatte tekrar arayaca\u011f\u0131z. \u0130yi g\u00fcnler.\" de ve ayn\u0131 turda close_call(not_reached, callback).\n  Pencere DI\u015eIYSA (\u00e7a\u011f\u0131rmadan \u00f6nce kendin kontrol et): bir kez \"O saatte arayam\u0131yoruz; 09:30 ile 18:30 aras\u0131nda, bug\u00fcn veya bir sonraki i\u015f g\u00fcn\u00fc uygun bir saat s\u00f6yleyebilir misiniz?\" diye sor. \u0130kinci cevap da d\u0131\u015far\u0131daysa veya saat veremezlerse: planlama, vedala\u015f, close_call(not_reached, no_callback).\n  Ki\u015fi sonra \"asl\u0131nda benim\" derse kimlik do\u011frulamaya ge\u00e7.\n\nB. K\u0130ML\u0130K DO\u011eRULAMA (onaydan sonra)\n1. Sor: \"G\u00fcvenli\u011finiz i\u00e7in do\u011fum y\u0131l\u0131n\u0131z\u0131 s\u00f6yler misiniz?\"\n2. Her cevapta verify_identity \u00e7a\u011f\u0131r (field=birth_year veya postcode, answer=sadece rakamlar). Sonra what_to_do_next ne diyorsa onu yap.\n3. Do\u011fum y\u0131l\u0131 do\u011fruysa: \"Posta kodunuzu s\u00f6yler misiniz?\" Tek seferde tek soru.\n4. Cevab\u0131 kendin de\u011ferlendirme, do\u011fru/yanl\u0131\u015f deme; ara\u00e7 sonucuna uy. M\u00fc\u015fterinin s\u00f6yledi\u011fi bilgiyi asla tekrar etme veya ipucu verme.\n5. 3 yanl\u0131\u015fta (ara\u00e7 s\u00f6yler): hesap bilgisi verme, vedala\u015f, close_call(not_verified, failed_identity).\n6. M\u00fc\u015fteri g\u00fcvenlik sorusuna cevap vermek istemezse: bir kez nedenini a\u00e7\u0131kla (g\u00fcvenli\u011fi i\u00e7in); yine istemezse vedala\u015f, close_call(not_reached, unclear).\n",
+    "interruptible": true,
+    "max_node_turns": 80,
+    "response_mapping": [],
+    "extraction_schema": [],
+    "max_turn_transition": null,
+    "truncation_strategy": "keep_all",
+    "suppress_tool_results": false,
+    "truncation_window_size": 10,
+    "on_enter_first_entry_only": false,
+    "disable_inactivity_monitor": false,
+    "passthrough_default_transition": null,
+    "return_to_previous_on_interrupt": false
+   },
+   "setup": {
+    "name": "setup",
+    "tools": [],
+    "on_enter": {
+     "type": "silent"
+    },
+    "node_type": "code",
+    "assertions": [],
+    "passthrough": true,
+    "pre_actions": [
+     {
+      "type": "function",
+      "function": {
+       "name": "code_exec",
+       "handler": "__function__:code_exec",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "code": {
+          "type": "string",
+          "default": "import datetime\nHOLIDAYS = dict([('2026-10-29', 'Cumhuriyet Bayram\u0131'), ('2027-01-01', 'Y\u0131lba\u015f\u0131')])\nNAMES = ['Pazartesi','Sal\u0131','\u00c7ar\u015famba','Per\u015fembe','Cuma','Cumartesi','Pazar']\nMONTHS = ['Ocak','\u015eubat','Mart','Nisan','May\u0131s','Haziran','Temmuz','A\u011fustos','Eyl\u00fcl','Ekim','Kas\u0131m','Aral\u0131k']\ndef is_bd(d):\n    return d.weekday() < 5 and d.isoformat() not in HOLIDAYS\ndef nth_bd_after(d, n):\n    c, k = d, 0\n    while k < n:\n        c = c + datetime.timedelta(days=1)\n        if is_bd(c):\n            k += 1\n    return c\ndef spoken(d):\n    return str(d.day) + ' ' + MONTHS[d.month - 1] + ' ' + NAMES[d.weekday()]\ndef money(x):\n    x = float(x)\n    if abs(x - round(x)) < 0.005:\n        s = format(int(round(x)), ',').replace(',', '.')\n    else:\n        s = format(x, ',.2f').replace(',', 'X').replace('.', ',').replace('X', '.')\n    return s + ' TL'\ndef num(x):\n    x = float(x)\n    return str(int(round(x))) if abs(x - round(x)) < 0.005 else ('%.2f' % x)\ntry:\n    now = str(vars.get('now') or '')\n    today = datetime.date.fromisoformat(now[:10])\n    tnow = now[11:16] if len(now) >= 16 else '00:00'\n    rows = []\n    for i in range(0, 46):\n        d = today + datetime.timedelta(days=i)\n        tag = 'i\u015f g\u00fcn\u00fc' if is_bd(d) else ('RESM\u0130 TAT\u0130L (' + HOLIDAYS[d.isoformat()] + ') - i\u015f g\u00fcn\u00fc de\u011fil' if d.isoformat() in HOLIDAYS else 'hafta sonu - i\u015f g\u00fcn\u00fc de\u011fil')\n        rows.append(d.isoformat() + ' ' + spoken(d) + ' - ' + tag)\n    nb = nth_bd_after(today, 1)\n    tm = today + datetime.timedelta(days=1)\n    cb = []\n    if is_bd(today) and tnow < '18:30':\n        start = tnow if tnow > '09:30' else '09:30'\n        cb.append('BUG\u00dcN ' + today.isoformat() + ' (' + spoken(today) + '): saat ' + start + ' sonras\u0131 ile 18:30 aras\u0131 (dahil)')\n    else:\n        cb.append('BUG\u00dcN ' + today.isoformat() + ': UYGUN DE\u011e\u0130L (saat ge\u00e7ti veya i\u015f g\u00fcn\u00fc de\u011fil)')\n    cb.append('SONRAK\u0130 \u0130\u015e G\u00dcN\u00dc ' + nb.isoformat() + ' (' + spoken(nb) + '): 09:30 ile 18:30 aras\u0131 (dahil)')\n    if tm != nb:\n        cb.append('Not: yar\u0131n ' + tm.isoformat() + ' (' + spoken(tm) + ') i\u015f g\u00fcn\u00fc DE\u011e\u0130L; \"yar\u0131n\" derlerse uygun de\u011fil, ' + nb.isoformat() + ' \u00f6nerin.')\n    else:\n        cb.append('\"Yar\u0131n\" = ' + tm.isoformat() + '.')\n    cb.append('Bunlar\u0131n d\u0131\u015f\u0131ndaki her g\u00fcn/saat PENCERE DI\u015eIDIR.')\n    vars['today'] = today.isoformat()\n    vars['cb_text'] = 'GER\u0130 ARAMA PENCERES\u0130 (\u015fu an ' + today.isoformat() + ' ' + tnow + '):\\n' + '\\n'.join(cb)\n    vars['cal_text'] = 'Bug\u00fcn ' + today.isoformat() + ' ' + spoken(today) + ', saat ' + tnow + '.\\nTakvim:\\n' + '\\n'.join(rows)\n    vars['setup_state'] = 'ok'\nexcept Exception as e:\n    vars['cal_text'] = 'Takvim yok'\n    vars['cb_text'] = 'Geri arama: sonraki i\u015f g\u00fcn\u00fc 09:30-18:30'\n    vars['setup_state'] = 'error'\n"
+         },
+         "timeout_ms": {
+          "type": "number",
+          "default": 10000
+         }
+        }
+       },
+       "description": ""
+      }
+     }
+    ],
+    "transitions": [
+     {
+      "condition": {
+       "mode": "exact",
+       "operator": "always"
+      },
+      "description": "always",
+      "target_node": "intro"
+     }
+    ],
+    "role_message": "",
+    "task_message": "",
+    "interruptible": true,
+    "max_node_turns": null,
+    "response_mapping": [],
+    "extraction_schema": [],
+    "max_turn_transition": null,
+    "truncation_strategy": "keep_all",
+    "suppress_tool_results": false,
+    "truncation_window_size": 10,
+    "on_enter_first_entry_only": false,
+    "disable_inactivity_monitor": true,
+    "passthrough_default_transition": "intro",
+    "return_to_previous_on_interrupt": false
+   },
+   "goodbye": {
+    "name": "goodbye",
+    "tools": [],
+    "on_enter": {
+     "type": "silent"
+    },
+    "terminal": {
+     "type": "function",
+     "function": {
+      "name": "call_closed",
+      "handler": "__function__:end_call",
+      "parameters": {
+       "type": "object",
+       "properties": {
+        "message_mode": {
+         "type": "string",
+         "default": "none"
+        }
+       }
+      },
+      "description": ""
+     }
+    },
+    "node_type": "end_call",
+    "assertions": [],
+    "passthrough": false,
+    "pre_actions": [],
+    "transitions": [],
+    "role_message": "",
+    "task_message": "",
+    "interruptible": true,
+    "max_node_turns": null,
+    "response_mapping": [],
+    "extraction_schema": [],
+    "max_turn_transition": null,
+    "truncation_strategy": "keep_all",
+    "suppress_tool_results": false,
+    "truncation_window_size": 10,
+    "on_enter_first_entry_only": false,
+    "disable_inactivity_monitor": true,
+    "passthrough_default_transition": null,
+    "return_to_previous_on_interrupt": false
+   },
+   "negotiate": {
+    "name": "negotiate",
+    "tools": [
+     {
+      "type": "function",
+      "config": {
+       "timeoutMs": 12000,
+       "maxRetries": 0
+      },
+      "function": {
+       "name": "create_promise",
+       "handler": "__function__:api_call",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "url": {
+          "type": "string",
+          "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/create_promise"
+         },
+         "body": {
+          "type": "object",
+          "required": [
+           "product_id",
+           "amount",
+           "payment_date"
+          ],
+          "properties": {
+           "amount": {
+            "type": "number",
+            "default": "{{amount}}",
+            "description": "TL, d\u00fcz say\u0131"
+           },
+           "product_id": {
+            "type": "string",
+            "default": "{{product_id}}",
+            "description": "FACTS i\u00e7indeki product_id"
+           },
+           "customer_id": {
+            "type": "string",
+            "default": "{{customer_id}}"
+           },
+           "payment_date": {
+            "type": "string",
+            "default": "{{payment_date}}",
+            "description": "YYYY-MM-DD"
+           }
+          }
+         },
+         "method": {
+          "type": "string",
+          "default": "POST"
+         },
+         "headers": {
+          "type": "object",
+          "properties": {
+           "Content-Type": {
+            "type": "string",
+            "default": "application/json"
+           }
+          }
+         }
+        }
+       },
+       "description": "Bir kart i\u00e7in \u00f6deme s\u00f6z\u00fcn\u00fc kaydet. SADECE m\u00fc\u015fteriye tutar+tarihi okuyup a\u00e7\u0131k \"evet\" onay\u0131 ald\u0131ktan sonra. Her kart i\u00e7in ayr\u0131 \u00e7a\u011fr\u0131. product_id FACTS i\u00e7inden aynen kopyala. amount: d\u00fcz say\u0131 (\u00f6r. 2000). payment_date: YYYY-MM-DD, TAR\u0130H TABLOSU'nda KABUL olan bir tarih."
+      },
+      "post_process_code": "try:\n    if isinstance(result, dict):\n        result.pop('header', None)\n        d = result.get('data')\n        if not isinstance(d, dict):\n            d = dict()\n            result['data'] = d\n        sc = 500\n        try:\n            sc = int(result.get('status_code', 200) or 200)\n        except Exception:\n            sc = 200\n        failed = d.get('ok') is False or sc >= 500 or (result.get('status') not in (None, 'success'))\n        pid = ''\n        try:\n            pid = str(config.get('body', dict()).get('product_id') or '')\n        except Exception:\n            pid = ''\n        if failed:\n            err = str(d.get('error') or '')\n            if err in ('invalid_date', 'below_minimum', 'above_past_due'):\n                d['what_to_do_next'] = 'KAYDED\u0130LMED\u0130 (' + err + '). De\u011ferleri kart plan\u0131na g\u00f6re d\u00fczelt: TAR\u0130H TABLOSU ve TUTAR KURALI. M\u00fc\u015fteriye ge\u00e7erli tarih/tutar\u0131 s\u00f6yle, onay al, sonra tekrar \u00e7a\u011f\u0131r. SMS c\u00fcmlesini S\u00d6YLEME.'\n            else:\n                k = 'pfail_' + pid\n                n = int(vars.get(k) or 0) + 1\n                vars[k] = str(n)\n                if n < 2:\n                    d['what_to_do_next'] = 'KAYDED\u0130LMED\u0130 (sistem hatas\u0131). M\u00fc\u015fteriye bir \u015fey s\u00f6ylemeden create_promise arac\u0131n\u0131 AYNI de\u011ferlerle hemen bir kez daha \u00e7a\u011f\u0131r. Kaydedildi deme, SMS c\u00fcmlesini s\u00f6yleme.'\n                else:\n                    d['what_to_do_next'] = '\u0130K\u0130NC\u0130 KEZ KAYDED\u0130LEMED\u0130. M\u00fc\u015fteriye d\u00fcr\u00fcst\u00e7e s\u00f6yle: \"Teknik bir sorun nedeniyle \u00f6deme s\u00f6z\u00fcn\u00fcz\u00fc sisteme i\u015fleyemedim.\" SMS c\u00fcmlesini S\u00d6YLEME. add_note ile not yaz (\u00f6r. \"S\u00f6z kayd\u0131 sistem hatas\u0131 nedeniyle yap\u0131lamad\u0131: <tutar> TL, <tarih>\"). Ba\u015fka kartta s\u00f6z kaydedilmediyse close_call: outcome=no_promise, reason=system_error.'\n        else:\n            vars['promise_ok'] = 'yes'\n            vars['n_promises'] = str(int(vars.get('n_promises') or 0) + 1)\n            d['what_to_do_next'] = 'S\u00f6z BA\u015eARIYLA kaydedildi. \u015eimdi AYNEN s\u00f6yle: \"\u00d6deme s\u00f6z\u00fcn\u00fcz\u00fc onaylayan bir SMS alacaks\u0131n\u0131z.\" Ba\u015fka kart varsa onunla devam et; yoksa te\u015fekk\u00fcr edip vedala\u015f ve close_call \u00e7a\u011f\u0131r: outcome=promise.'\nexcept Exception:\n    pass\n"
+     },
+     {
+      "type": "function",
+      "config": {
+       "timeoutMs": 12000,
+       "maxRetries": 0
+      },
+      "function": {
+       "name": "add_note",
+       "handler": "__function__:api_call",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "url": {
+          "type": "string",
+          "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/add_note"
+         },
+         "body": {
+          "type": "object",
+          "required": [
+           "text"
+          ],
+          "properties": {
+           "text": {
+            "type": "string",
+            "default": "{{note_text}}",
+            "description": "K\u0131sa not"
+           },
+           "customer_id": {
+            "type": "string",
+            "default": "{{customer_id}}"
+           }
+          }
+         },
+         "method": {
+          "type": "string",
+          "default": "POST"
+         },
+         "headers": {
+          "type": "object",
+          "properties": {
+           "Content-Type": {
+            "type": "string",
+            "default": "application/json"
+           }
+          }
+         }
+        }
+       },
+       "description": "Arama notu ekle (k\u0131sa, T\u00fcrk\u00e7e). TEK BA\u015eINA \u00e7a\u011f\u0131r (ayn\u0131 anda ba\u015fka ara\u00e7 \u00e7a\u011f\u0131rma), sonucunu bekle. Zorluk, itiraz, zaten \u00f6dedim ve iki kez ba\u015far\u0131s\u0131z s\u00f6z kayd\u0131nda kullan."
+      },
+      "post_process_code": "try:\n    if isinstance(result, dict):\n        result.pop('header', None)\n        d = result.get('data')\n        if not isinstance(d, dict):\n            d = dict()\n            result['data'] = d\n        sc = 500\n        try:\n            sc = int(result.get('status_code', 200) or 200)\n        except Exception:\n            sc = 200\n        failed = d.get('ok') is False or sc >= 500 or (result.get('status') not in (None, 'success'))\n        if failed:\n            d['what_to_do_next'] = 'Not kaydedilemedi. add_note arac\u0131n\u0131 bir kez daha ayn\u0131 metinle \u00e7a\u011f\u0131r.'\n        else:\n            vars['note_ok'] = 'yes'\n            d['what_to_do_next'] = 'Not kaydedildi (m\u00fc\u015fteriye not hakk\u0131nda bir \u015fey s\u00f6yleme). Kurala g\u00f6re s\u0131radaki ad\u0131ma ge\u00e7: zorluk/itirazda transfer_to_agent (hen\u00fcz yap\u0131lmad\u0131ysa), sonra vedala\u015f + close_call; zaten \u00f6dedimde vedala\u015f + close_call(paid).'\nexcept Exception:\n    pass\n"
+     },
+     {
+      "type": "function",
+      "config": {
+       "timeoutMs": 12000,
+       "maxRetries": 0
+      },
+      "function": {
+       "name": "transfer_to_agent",
+       "handler": "__function__:api_call",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "url": {
+          "type": "string",
+          "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/transfer_to_agent"
+         },
+         "body": {
+          "type": "object",
+          "required": [
+           "reason"
+          ],
+          "properties": {
+           "reason": {
+            "enum": [
+             "hardship",
+             "dispute"
+            ],
+            "type": "string",
+            "default": "{{transfer_reason}}",
+            "description": "hardship veya dispute"
+           },
+           "customer_id": {
+            "type": "string",
+            "default": "{{customer_id}}"
+           }
+          }
+         },
+         "method": {
+          "type": "string",
+          "default": "POST"
+         },
+         "headers": {
+          "type": "object",
+          "properties": {
+           "Content-Type": {
+            "type": "string",
+            "default": "application/json"
+           }
+          }
+         }
+        }
+       },
+       "description": "Canl\u0131 temsilciye aktar. \u00d6NCE add_note \u00e7a\u011fr\u0131lm\u0131\u015f olmal\u0131 (zorunlu). reason: hardship (i\u015fsizlik, hastal\u0131k vb. \u00f6deme g\u00fc\u00e7l\u00fc\u011f\u00fc) veya dispute (borca/harcamaya itiraz). \u00d6nce add_note \u00e7a\u011f\u0131r."
+      },
+      "post_process_code": "try:\n    if isinstance(result, dict):\n        result.pop('header', None)\n        d = result.get('data')\n        if not isinstance(d, dict):\n            d = dict()\n            result['data'] = d\n        sc = 500\n        try:\n            sc = int(result.get('status_code', 200) or 200)\n        except Exception:\n            sc = 200\n        failed = d.get('ok') is False or sc >= 500 or (result.get('status') not in (None, 'success'))\n        if failed:\n            d['what_to_do_next'] = 'Aktar\u0131m YAPILAMADI. transfer_to_agent arac\u0131n\u0131 bir kez daha ayn\u0131 de\u011ferle \u00e7a\u011f\u0131r. Aktar\u0131ld\u0131 deme.'\n        else:\n            vars['transfer_reason_done'] = str(config.get('body', dict()).get('reason') or '')\n            if vars.get('note_ok') != 'yes':\n                d['what_to_do_next'] = 'Aktar\u0131m ba\u015far\u0131l\u0131 AMA not eksik. M\u00fc\u015fteriye bir \u015fey demeden \u015e\u0130MD\u0130 add_note \u00e7a\u011f\u0131r (k\u0131sa not: durumun ne oldu\u011fu). Not sonras\u0131 temsilciye aktar\u0131ld\u0131\u011f\u0131n\u0131 s\u00f6yle, vedala\u015f ve close_call(outcome=transferred, reason=' + vars['transfer_reason_done'] + ').'\n            else:\n                d['what_to_do_next'] = 'Aktar\u0131m ba\u015far\u0131l\u0131. M\u00fc\u015fteriye k\u0131sa bir c\u00fcmleyle temsilciye aktar\u0131ld\u0131\u011f\u0131n\u0131 s\u00f6yle, vedala\u015f ve ayn\u0131 turda close_call \u00e7a\u011f\u0131r: outcome=transferred, reason=' + vars['transfer_reason_done'] + '.'\nexcept Exception:\n    pass\n"
+     },
+     {
+      "type": "function",
+      "config": {
+       "timeoutMs": 12000,
+       "maxRetries": 0
+      },
+      "function": {
+       "name": "close_call",
+       "handler": "__function__:api_call",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "url": {
+          "type": "string",
+          "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/close_call"
+         },
+         "body": {
+          "type": "object",
+          "required": [
+           "outcome"
+          ],
+          "properties": {
+           "reason": {
+            "enum": [
+             "hardship",
+             "dispute",
+             "refused",
+             "customer_hangup",
+             "system_error",
+             "failed_identity",
+             "callback",
+             "no_callback",
+             "wrong_number",
+             "deceased",
+             "unclear"
+            ],
+            "type": "string",
+            "default": "{{reason}}",
+            "description": "promise ve paid d\u0131\u015f\u0131nda zorunlu"
+           },
+           "outcome": {
+            "enum": [
+             "promise",
+             "paid",
+             "transferred",
+             "no_promise",
+             "not_verified",
+             "not_reached"
+            ],
+            "type": "string",
+            "default": "{{outcome}}",
+            "description": "Tabloya g\u00f6re"
+           },
+           "customer_id": {
+            "type": "string",
+            "default": "{{customer_id}}"
+           }
+          }
+         },
+         "method": {
+          "type": "string",
+          "default": "POST"
+         },
+         "headers": {
+          "type": "object",
+          "properties": {
+           "Content-Type": {
+            "type": "string",
+            "default": "application/json"
+           }
+          }
+         }
+        }
+       },
+       "description": "Araman\u0131n sonucunu kaydet. HER ZAMAN son ara\u00e7 \u00e7a\u011fr\u0131s\u0131, tam bir kez, vedala\u015fma c\u00fcmlesiyle ayn\u0131 turda. TABLO: promise (reason yok) = en az bir s\u00f6z create_promise ok=true ile kaydedildi. paid (reason yok) = m\u00fc\u015fteri zaten \u00f6dedi\u011fini s\u00f6yledi ve add_note yaz\u0131ld\u0131. transferred + hardship / dispute = transfer_to_agent ba\u015far\u0131l\u0131 oldu. no_promise + refused = do\u011frulanm\u0131\u015f, 2 ikna denemesinden sonra h\u00e2l\u00e2 s\u00f6z yok; no_promise + customer_hangup = do\u011frulanm\u0131\u015f m\u00fc\u015fteri s\u00f6z vermeden kapatmak istedi; no_promise + system_error = create_promise iki kez ba\u015far\u0131s\u0131z (add_note sonras\u0131). not_verified + failed_identity = 3 yanl\u0131\u015f g\u00fcvenlik cevab\u0131. not_reached + callback = schedule_callback ba\u015far\u0131l\u0131; no_callback = pencere d\u0131\u015f\u0131 saat iki kez / saat verilmedi; wrong_number = yanl\u0131\u015f numara; deceased = m\u00fc\u015fteri vefat etmi\u015f; unclear = iki soruda da do\u011fru ki\u015fi teyit edilemedi."
+      },
+      "pre_process_code": "try:\n    b = config.get('body')\n    if isinstance(b, dict):\n        if str(b.get('outcome')) in ('promise', 'paid'):\n            b.pop('reason', None)\n        elif not b.get('reason') or '{' in str(b.get('reason')):\n            b.pop('reason', None)\nexcept Exception:\n    pass\n",
+      "post_process_code": "try:\n    if isinstance(result, dict):\n        result.pop('header', None)\n        d = result.get('data')\n        if not isinstance(d, dict):\n            d = dict()\n            result['data'] = d\n        sc = 500\n        try:\n            sc = int(result.get('status_code', 200) or 200)\n        except Exception:\n            sc = 200\n        failed = d.get('ok') is False or sc >= 500 or (result.get('status') not in (None, 'success'))\n        if failed and str(d.get('error') or '') != 'call_closed':\n            d['what_to_do_next'] = 'Kapatma i\u015flenmedi. close_call arac\u0131n\u0131 ayn\u0131 de\u011ferlerle bir kez daha \u00e7a\u011f\u0131r.'\n        else:\n            vars['closed'] = 'yes'\n            d['what_to_do_next'] = 'Arama kapand\u0131. Ba\u015fka hi\u00e7bir \u015fey s\u00f6yleme veya \u00e7a\u011f\u0131rma.'\nexcept Exception:\n    pass\n"
+     }
+    ],
+    "on_enter": {
+     "type": "llm"
+    },
+    "node_type": "conversation",
+    "assertions": [],
+    "passthrough": false,
+    "pre_actions": [],
+    "transitions": [
+     {
+      "condition": {
+       "logic": "or",
+       "conditions": [
+        {
+         "mode": "exact",
+         "operand": "yes",
+         "operator": "equals",
+         "variable": "closed"
+        },
+        {
+         "mode": "exact",
+         "operand": 0,
+         "operator": "greater_than",
+         "variable": "close_call_success_count"
+        }
+       ]
+      },
+      "description": "The call was closed",
+      "target_node": "goodbye"
+     }
+    ],
+    "role_message": "Sen Anadolu Kart Bank'\u0131n dijital asistan\u0131s\u0131n; kay\u0131tl\u0131 bir giden telefon aramas\u0131ndas\u0131n. SADECE T\u00fcrk\u00e7e konu\u015f. Her turda bir-iki k\u0131sa c\u00fcmle, tek seferde tek soru. M\u00fc\u015fteriye \"{{unvan}} {{soyad}}\" diye hitap et (\u00f6r. \"Bay Y\u0131lmaz\").\nTarihleri do\u011fal T\u00fcrk\u00e7e s\u00f6yle (\u00f6r. \"20 Ekim Sal\u0131\"), tutarlar\u0131 \"4.800 TL\" gibi.\nHer ara\u00e7 sonucundan sonra what_to_do_next talimat\u0131na uy; sonra m\u00fc\u015fteriyle konu\u015f veya s\u0131radaki arac\u0131 \u00e7a\u011f\u0131r. Asla bo\u015f tur b\u0131rakma.\nBir i\u015flem ara\u00e7 ok=true d\u00f6nmeden \"kaydedildi / planland\u0131 / aktar\u0131ld\u0131\" deme. Rakam, tarih, neden uydurma.\nRobot/yapay zeka sorulursa: Anadolu Kart Bank'\u0131n dijital asistan\u0131 oldu\u011funu s\u00f6yle ve devam et.\nArama bitti\u011finde: TEK turda te\u015fekk\u00fcr edip vedala\u015f VE close_call \u00e7a\u011f\u0131r (tam bir kez, her zaman son ara\u00e7 \u00e7a\u011fr\u0131s\u0131).\n",
+    "task_message": "A\u015eAMA: m\u00fc\u015fteri {{unvan}} {{soyad}} K\u0130ML\u0130\u011e\u0130 DO\u011eRULANDI. \u015eimdi kartlar\u0131 konu\u015f.\n\nFACTS (kod hesaplad\u0131, aynen g\u00fcven, tarih/tutar HESAPLAMA, tablodan bak):\n{{debt_text}}\n\n{{plan_text}}\n\nTAKV\u0130M:\n{{cal_text}}\n\nAKI\u015e:\n1. \u0130lk turunda: KART 1'in \u0130LK SORU c\u00fcmlesini aynen s\u00f6yle (birden \u00e7ok kart varsa \u00f6nce \"Gecikmi\u015f iki kart\u0131n\u0131z var.\" gibi k\u0131saca belirt, sonra KART 1 ile ba\u015fla). Kartlar\u0131 FACTS s\u0131ras\u0131yla TEK TEK i\u015fle; bir kart bitince (s\u00f6z kaydedildi veya s\u00f6z yok) di\u011ferine ge\u00e7 ve onun \u0130LK SORU c\u00fcmlesini s\u00f6yle.\n2. M\u00fc\u015fteri tarih s\u00f6ylerse: o tarihi ilgili kart\u0131n TAR\u0130H TABLOSU'nda bul ve sat\u0131r\u0131n dedi\u011fini aynen yap. (\"20 Ekim\" -> o y\u0131l\u0131n 2026-10-20 sat\u0131r\u0131; \"cuma\", \"yar\u0131n\", \"haftaya\" -> TAKV\u0130M'den bul.) Tatil/hafta sonu ise nedenini (\u00f6r. \"29 Ekim Cumhuriyet Bayram\u0131, i\u015f g\u00fcn\u00fc de\u011fil\") ve en ge\u00e7 son tarihi s\u00f6yleyip sat\u0131rdaki se\u00e7enekleri \u00f6ner.\n3. M\u00fc\u015fteri tutar s\u00f6ylerse: TUTAR KURALI'na uy. Tutar s\u00f6ylemeden \"\u00f6derim\" derse tam borcu mu \u00f6deyece\u011fini sor. Asgari alt\u0131 tutara asgari tutar\u0131 s\u00f6yle.\n4. Son tarihten sonras\u0131 isterse: bir kez son tarihi tekrar \u00f6ner. Kabul etmezse \u0130KNA 1, sonra \u0130KNA 2. Her ad\u0131m bir kez; bir teklifi asla tekrarlama. Hangi ad\u0131mda oldu\u011funu takip et. Toplam en fazla 2 ikna denemesi. H\u00e2l\u00e2 hay\u0131rsa o kart i\u00e7in s\u00f6z yok.\n5. ONAY: kaydetmeden \u00f6nce oku: \"Sonu XXXX ile biten kart\u0131n\u0131z i\u00e7in <tarih> tarihinde <tutar> \u00f6deme s\u00f6z\u00fc al\u0131yorum, onayl\u0131yor musunuz?\" A\u00e7\u0131k \"evet\" gelince create_promise \u00e7a\u011f\u0131r (product_id FACTS'ten aynen, amount d\u00fcz say\u0131, payment_date YYYY-MM-DD). Kaydedilen s\u00f6z de\u011fi\u015ftirilmez; her kart i\u00e7in tek s\u00f6z.\n6. create_promise sonras\u0131 what_to_do_next'e AYNEN uy. \"\u00d6deme s\u00f6z\u00fcn\u00fcz\u00fc onaylayan bir SMS alacaks\u0131n\u0131z.\" c\u00fcmlesi SADECE ok=true sonras\u0131 s\u00f6ylenir. Hata olursa m\u00fc\u015fteriye bir \u015fey demeden bir kez tekrar dene; ikinci hata: d\u00fcr\u00fcst\u00e7e kaydedilemedi\u011fini s\u00f6yle, add_note, close_call(no_promise, system_error). \"kaydedildi/kaydettim/al\u0131nd\u0131\" s\u00f6zc\u00fcklerini sadece ok=true sonras\u0131 kullan.\n\n\u00d6ZEL DURUMLAR (hemen, ikna etmeden):\n- ZORLUK (i\u015fsizlik, i\u015fini kaybetme, hastal\u0131k, gelir yok vb.): empati kur (\"Anl\u0131yorum, ge\u00e7mi\u015f olsun.\"), ikna ETME, add_note (\u00f6r. \"M\u00fc\u015fteri i\u015fini kaybetti, \u00f6deme g\u00fc\u00e7l\u00fc\u011f\u00fc\") TEK BA\u015eINA \u00e7a\u011f\u0131r ve sonucunu bekle, ANCAK ondan sonra transfer_to_agent(reason=hardship), sonra \"Size yard\u0131mc\u0131 olabilecek bir temsilciye aktar\u0131yorum.\" + close_call(transferred, hardship).\n- \u0130T\u0130RAZ (\"bu harcamay\u0131 ben yapmad\u0131m\", \"borcum yok\"): tart\u0131\u015fma, add_note (itiraz\u0131 yaz) tek ba\u015f\u0131na, sonucu gelince transfer_to_agent(reason=dispute), close_call(transferred, dispute).\n- ZATEN \u00d6DED\u0130M: inanmaya/ikna etmeye \u00e7al\u0131\u015fma, do\u011frulayamazs\u0131n. add_note (\u00f6r. \"M\u00fc\u015fteri \u00f6dedi\u011fini beyan etti\"), sonra te\u015fekk\u00fcr, vedala\u015f, close_call(paid) (reason yok).\n- M\u00fc\u015fteri kapatmak/konu\u015fmak istemezse ve hi\u00e7 s\u00f6z yoksa: vedala\u015f, close_call(no_promise, customer_hangup). S\u00f6z varsa close_call(promise).\n- Robot musun: dijital asistan oldu\u011funu s\u00f6yle, devam et. Bilmedi\u011fin soru: o bilgiye sahip olmad\u0131\u011f\u0131n\u0131 s\u00f6yle.\n\nKAPANI\u015e: t\u00fcm kartlar bitince: en az bir s\u00f6z ok=true ise (SMS c\u00fcmlesi s\u00f6ylendiyse) te\u015fekk\u00fcr et, vedala\u015f ve ayn\u0131 turda close_call(promise). Hi\u00e7 s\u00f6z yoksa ve ikna bittiyse close_call(no_promise, refused). close_call her zaman son ara\u00e7 \u00e7a\u011fr\u0131s\u0131d\u0131r.\n",
+    "interruptible": true,
+    "max_node_turns": 80,
+    "response_mapping": [],
+    "extraction_schema": [],
+    "max_turn_transition": null,
+    "truncation_strategy": "keep_all",
+    "suppress_tool_results": false,
+    "truncation_window_size": 10,
+    "on_enter_first_entry_only": false,
+    "disable_inactivity_monitor": false,
+    "passthrough_default_transition": null,
+    "return_to_previous_on_interrupt": false
+   },
+   "load_account": {
+    "name": "load_account",
+    "tools": [],
+    "on_enter": {
+     "type": "silent"
+    },
+    "node_type": "api_request",
+    "assertions": [],
+    "passthrough": true,
+    "pre_actions": [
+     {
+      "type": "function",
+      "config": {
+       "timeoutMs": 10000,
+       "maxRetries": 2
+      },
+      "function": {
+       "name": "get_account",
+       "handler": "__function__:api_call",
+       "parameters": {
+        "type": "object",
+        "properties": {
+         "url": {
+          "type": "string",
+          "default": "https://freya-bank-rehearsal2.ahmetkumas-freya.workers.dev/api/v1/get_account"
+         },
+         "body": {
+          "type": "object",
+          "required": [],
+          "properties": {
+           "customer_id": {
+            "type": "string",
+            "default": "{{customer_id}}"
+           }
+          }
+         },
+         "method": {
+          "type": "string",
+          "default": "POST"
+         },
+         "headers": {
+          "type": "object",
+          "properties": {
+           "Content-Type": {
+            "type": "string",
+            "default": "application/json"
+           }
+          }
+         }
+        }
+       },
+       "description": "Get the account."
+      }
+     }
+    ],
+    "transitions": [
+     {
+      "condition": {
+       "mode": "exact",
+       "operator": "always"
+      },
+      "description": "always",
+      "target_node": "facts"
+     }
+    ],
+    "role_message": "",
+    "task_message": "",
+    "interruptible": true,
+    "max_node_turns": null,
+    "response_mapping": [
+     {
+      "path": "data.products",
+      "variable": "products",
+      "description": ""
+     }
+    ],
+    "extraction_schema": [],
+    "max_turn_transition": null,
+    "truncation_strategy": "keep_all",
+    "suppress_tool_results": false,
+    "truncation_window_size": 10,
+    "on_enter_first_entry_only": false,
+    "disable_inactivity_monitor": true,
+    "passthrough_default_transition": "facts",
+    "return_to_previous_on_interrupt": false
+   }
+  },
+  "tools": [],
+  "agent_config": {
+   "llmConfig": {
+    "model": "experimental-5",
+    "tools": [
+     {
+      "type": "function",
+      "function": {
+       "name": "end_call",
+       "handler": "__function__:end_call",
+       "parameters": {
+        "type": "object",
+        "properties": {}
+       },
+       "description": "This is used to technically terminate the call after all the customer's questions have been answered and necessary information has been provided.\n- It should only be triggered SILENTLY in the background after the customer-related workflow is complete; never mention this tool or its name to the customer."
+      }
+     }
+    ],
+    "apiKey": null,
+    "baseUrl": null,
+    "provider": "experimental-5",
+    "maxTokens": 1000,
+    "clientType": null,
+    "temperature": 0.7,
+    "firstMessage": "Selam! Sana nas\u0131l yard\u0131mc\u0131 olabilirim?",
+    "systemPrompt": "You are a helpful assistant. Your role is to help users with their tasks. Always be friendly and professional. You can use `end_call` tool after you say goodbye to customer to hang up if call about to finish.",
+    "firstMessageMode": "assistant-speaks-first",
+    "additionalSettings": {},
+    "disableInterruptionsDuringFirstMessage": true
+   },
+   "sttConfig": {
+    "model": "freya-stt",
+    "apiKey": null,
+    "baseUrl": null,
+    "language": "tr",
+    "provider": "Freya",
+    "confidenceReask": {
+     "enabled": false,
+     "reaskMode": "phrase",
+     "reduction": "min",
+     "threshold": 0.3,
+     "reaskPhrases": null,
+     "disableOnDigitNodes": true,
+     "maxConsecutiveReasks": 2
+    },
+    "additionalSettings": {
+     "diarize": false,
+     "punctuate": true,
+     "streaming": true,
+     "aicEnabled": false,
+     "krispEnabled": false,
+     "smartTurnEnabled": true
+    }
+   },
+   "ttsConfig": {
+    "model": "freya-tts",
+    "apiKey": null,
+    "baseUrl": null,
+    "voiceId": "leyla",
+    "language": "tr",
+    "provider": "Freya",
+    "stopSpeakingPlan": {
+     "voiceSeconds": 0.1,
+     "numberOfWords": 2,
+     "backOffSeconds": 0.4,
+     "interruptionPhrases": [
+      "dur",
+      "bekle",
+      "bir dakika",
+      "bir saniye",
+      "dursana",
+      "bekle bi",
+      "anlamad\u0131m",
+      "ne diyon",
+      "ne diyorsun",
+      "ne dedin",
+      "yeter"
+     ],
+     "acknowledgementPhrases": [
+      "h\u0131",
+      "evet",
+      "tamam",
+      "aynen",
+      "okey",
+      "okay",
+      "anlad\u0131m",
+      "hee",
+      "ee",
+      "eee",
+      "\u0131\u0131",
+      "\u0131\u0131\u0131",
+      "ha",
+      "h\u0131-h\u0131",
+      "ha-ha",
+      "tabi",
+      "tabii",
+      "peki",
+      "tamamd\u0131r",
+      "h\u0131 h\u0131",
+      "h\u0131m",
+      "h\u0131mm",
+      "h\u0131h\u0131",
+      "haha",
+      "he",
+      "hahaha"
+     ]
+    },
+    "startSpeakingPlan": {
+     "waitSeconds": 0.5,
+     "backgroundNoisePhrases": [
+      "arka plan sesi",
+      "klavye sesi",
+      "klavye sesleri",
+      "\u00f6ks\u00fcr\u00fck",
+      "\u00f6ks\u00fcr\u00fck sesi",
+      "video sesi",
+      "video kayd\u0131",
+      "\u00e7\u0131lg\u0131n ses",
+      "\u00e7\u0131lg\u0131n kahkaha",
+      "g\u00fcl\u00fc\u015f",
+      "ses ses ses",
+      "\u00e7\u0131k \u00e7\u0131k \u00e7\u0131k",
+      "sim",
+      "sim izle"
+     ]
+    },
+    "textSubstitutions": [
+     {
+      "pattern": "@",
+      "replacement": "at"
+     },
+     {
+      "pattern": "\\$",
+      "replacement": "dollars"
+     },
+     {
+      "pattern": "%",
+      "replacement": "percent"
+     },
+     {
+      "pattern": "&",
+      "replacement": "and"
+     },
+     {
+      "pattern": "\\+",
+      "replacement": "plus"
+     },
+     {
+      "pattern": "turkishairlines",
+      "replacement": "turkish airlines",
+      "caseInsensitive": true
+     }
+    ],
+    "additionalSettings": {
+     "speed": 1,
+     "stability": 0.5,
+     "similarity_boost": 0.75
+    },
+    "speechNormalization": {
+     "urls": true,
+     "names": false,
+     "emails": true,
+     "emojis": true,
+     "phoneNumbers": false,
+     "generalNumbers": false,
+     "identityNumbers": false
+    }
+   },
+   "dtmfConfig": {
+    "prefix": "DTMF: ",
+    "enabled": false,
+    "timeout": 2,
+    "terminationDigit": "#"
+   },
+   "syncSource": null,
+   "privacyConfig": {
+    "enableRecording": true,
+    "getRecordingConsent": false,
+    "recordingConsentText": null
+   },
+   "complianceConfig": {
+    "soc2": false,
+    "pciDss": false,
+    "euAiAct": false,
+    "mifidIi": false
+   },
+   "routingLlmConfig": null,
+   "backgroundSoundUrl": null,
+   "piiRedactionConfig": {
+    "enabled": false,
+    "maskIban": true,
+    "maskEmail": true,
+    "maskPhone": true,
+    "customRules": [],
+    "maskNationalId": true,
+    "maskPaymentCard": true
+   },
+   "voicemailDetection": {
+    "enabled": false,
+    "messageMode": "none",
+    "staticMessage": null,
+    "voicemailResponseDelay": 2
+   },
+   "callTimeoutSettings": {
+    "maxRetries": 2,
+    "dynamicWait": null,
+    "checkInMessage": null,
+    "closureMessage": null,
+    "silenceTimeout": 10,
+    "maximumDuration": 600,
+    "maxDurationEndCall": {
+     "llmPrompt": null,
+     "messageMode": "llm",
+     "interruptible": false,
+     "spokenMessage": null,
+     "triggerTimeout": null
+    },
+    "silenceTimeoutPrompt": null
+   },
+   "extractionLlmConfig": null,
+   "postConversationAnalysis": {
+    "analysisModel": null,
+    "summaryPrompt": null,
+    "autoDetectProblems": false,
+    "problemDetectionPrompt": null,
+    "problemDetectionInstructions": null
+   }
+  },
+  "global_nodes": {},
+  "initial_node": "setup",
+  "system_prompt": "Sen Anadolu Kart Bank'\u0131n dijital asistan\u0131s\u0131n; kay\u0131tl\u0131 bir giden telefon aramas\u0131ndas\u0131n. SADECE T\u00fcrk\u00e7e konu\u015f. Her turda bir-iki k\u0131sa c\u00fcmle, tek seferde tek soru. M\u00fc\u015fteriye \"{{unvan}} {{soyad}}\" diye hitap et (\u00f6r. \"Bay Y\u0131lmaz\").\nTarihleri do\u011fal T\u00fcrk\u00e7e s\u00f6yle (\u00f6r. \"20 Ekim Sal\u0131\"), tutarlar\u0131 \"4.800 TL\" gibi.\nHer ara\u00e7 sonucundan sonra what_to_do_next talimat\u0131na uy; sonra m\u00fc\u015fteriyle konu\u015f veya s\u0131radaki arac\u0131 \u00e7a\u011f\u0131r. Asla bo\u015f tur b\u0131rakma.\nBir i\u015flem ara\u00e7 ok=true d\u00f6nmeden \"kaydedildi / planland\u0131 / aktar\u0131ld\u0131\" deme. Rakam, tarih, neden uydurma.\nRobot/yapay zeka sorulursa: Anadolu Kart Bank'\u0131n dijital asistan\u0131 oldu\u011funu s\u00f6yle ve devam et.\nArama bitti\u011finde: TEK turda te\u015fekk\u00fcr edip vedala\u015f VE close_call \u00e7a\u011f\u0131r (tam bir kez, her zaman son ara\u00e7 \u00e7a\u011fr\u0131s\u0131).\n",
+  "test_variables": {
+   "ad": "Mehmet",
+   "now": "2026-10-14T11:00",
+   "soyad": "Y\u0131lmaz",
+   "unvan": "Bay",
+   "customer_id": "AK-1001"
+  }
+ }
+}
