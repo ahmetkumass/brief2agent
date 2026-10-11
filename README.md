@@ -1,3 +1,22 @@
+# brief2agent: our builder
+
+Run once per final brief, no manual step:
+
+```bash
+source env.sh                     # FREYA_API_KEY, FREYA_BANK_TEAM_KEY, and ANTHROPIC_API_KEY (or a Claude login with BUILDER_USE_LOGIN=1)
+pip install claude-agent-sdk openpyxl
+python3 builder/build.py <brief.zip | case folder | brief files...> <mock_url> [--slot NAME] 2>&1 | tee traces/<slot>.log
+```
+
+- `builder/ingest.py` turns every file of the brief (md, docx, xlsx, pdf, json, zip) into `work/<slot>/corpus.md`.
+- `builder/build.py` runs Claude (Claude Agent SDK) with the skills `.claude/skills/build-phone-agent` and `.claude/skills/bank-mock`: it writes `work/<slot>/rules.md`, the workflow `out/<slot>.workflow.json`, saves it on Freya, tests it on cases built from the brief's test customers, fixes what fails, within a 28 minute budget.
+- Output: `submissions/<slot>.workflow.json` (export) and `traces/<slot>-<time>.log` (start/end, every model call with model and purpose, what was created on Freya, self-test results; secrets redacted).
+- `builder/make_submission.py <slot> <mock_url> --team NAME --members "A,B"` writes `submission.json`.
+
+The kit's original README follows.
+
+---
+
 # Build the Builder
 
 **Kit version 3** (10 October 2026). The file `VERSION` holds the number. When we update the kit, the number goes up and the changes are listed here.
