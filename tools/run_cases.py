@@ -34,8 +34,8 @@ STYLES = {
 
 def persona_for(case, ident, style=None):
     v, i = case["variables"], ident["identity"]
-    me = f"{v['first_name']} {v['last_name']}"
-    if case["family"] == "Third party" or case.get("third_party"):
+    me = " ".join(str(x) for x in (v.get("first_name") or v.get("ad") or v.get("name") or "", v.get("last_name") or v.get("soyad") or "") if x).strip() or "the customer"
+    if case.get("family") == "Third party" or case.get("third_party"):
         who = f"You are NOT {me}. You answered this phone. You do not know {me}'s security answers and you would not give them. The text below says who you are."
     else:
         say = {"date_of_birth": "Your date of birth is {} (say it in words, like '14 March 1988').", "phone_last4": "The last four digits of your phone number on file are {}.",
@@ -46,12 +46,12 @@ def persona_for(case, ident, style=None):
     text = PERSONA.format(who=who, script=case["script"]) + ("\n\n" + STYLES[style] if style else "")
     if case.get("language"):                                       # a self-made case for a brief in another language
         text += f"\n\nLANGUAGE: You speak only {case['language']}, like a native speaker, in every turn. Say dates, amounts and numbers the way a native {case['language']} speaker says them. If the caller reads something back and it matches, confirm in {case['language']}."
-    return {"name": case["id"] + " " + case["title"] + (f" [{style}]" if style else ""), "prompt": text, "successCriteria": "All of these are true:\n- " + "\n- ".join(case["checks"]), "tags": ["hackathon", "brief-" + str(case.get("brief", "final"))]}
+    return {"name": case["id"] + " " + case.get("title", case.get("family", "")) + (f" [{style}]" if style else ""), "prompt": text, "successCriteria": "All of these are true:\n- " + "\n- ".join(case.get("checks") or ["the agent follows the brief"]), "tags": ["hackathon", "brief-" + str(case.get("brief", "final"))]}
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("agent_id"); ap.add_argument("--brief"); ap.add_argument("--cases", default=str(ROOT / "public-test-set.json")); ap.add_argument("--out"); ap.add_argument("--only"); ap.add_argument("--reps", type=int, default=1); ap.add_argument("--style", choices=sorted(STYLES)); ap.add_argument("--rerun-if-slow", type=int, default=0)
     a = ap.parse_args()
-    cases = [c for c in json.load(open(a.cases)) if (not a.brief or c["brief"] == a.brief) and (not a.only or c["id"] in a.only.split(","))]
+    cases = [c for c in json.load(open(a.cases)) if (not a.brief or c.get("brief") == a.brief) and (not a.only or c["id"] in a.only.split(","))]
     ident = {c["id"]: {"identity": c["identity"]} for c in cases}
     store = ROOT / ".personas.json"; ids = json.load(open(store)) if store.exists() else {}
     # a persona is recreated whenever its text changes, so an edited case never runs with a stale customer
@@ -72,7 +72,7 @@ def main():
         reps.append(rows); total_s += took
         if a.reps > 1: print(f"-- run {rep + 1} of {a.reps}: {sum(r['pass'] for r in rows)} / {len(rows)} passed, {took:.0f} s\n")
     need = a.reps                                                # a customer counts only when every run passes
-    final = [{"id": c["id"], "family": c["family"], "passes": sum(r[k]["pass"] for r in reps), "runs": a.reps, "pass": sum(r[k]["pass"] for r in reps) >= need} for k, c in enumerate(cases)]
+    final = [{"id": c["id"], "family": c.get("family", ""), "passes": sum(r[k]["pass"] for r in reps), "runs": a.reps, "pass": sum(r[k]["pass"] for r in reps) >= need} for k, c in enumerate(cases)]
     n = sum(f["pass"] for f in final)
     if a.reps > 1:
         for f in final: print(("PASS" if f["pass"] else "FAIL"), f["id"], f"{f['passes']}/{f['runs']}")
@@ -93,12 +93,13 @@ def run_once(agent_id, cases, ids):
     rows = []
     for c in cases:
         led = http("/v1/practice/ledger/" + sessions[c["id"]]["customer_id"])
-        r = score_ledger(c, led)
+        try: r = score_ledger(c, led)
+        except Exception as e: r = {"pass": False, "failed": [f"scorer error {type(e).__name__}: {e} (check the case format)"]}
         j = judge.get(ids[c["id"]], {})                      # the conversation checks, read from the transcript by the judge model
         if j.get("outcome") != "pass": r["failed"].append("conversation: " + " ".join(str(j.get("reason") or "no verdict").split())[:400])
         r["pass"] = not r["failed"]
-        rows.append({"id": c["id"], "level": c["level"], "family": c["family"], "pass": r["pass"], "failed": r["failed"], "call_id": j.get("callId"), "tools": [x["tool"] for x in led["calls"]], "customer_id": sessions[c["id"]]["customer_id"]})
-        print(("PASS" if r["pass"] else "FAIL"), c["id"], f"{c['level']:<6}", f"{c['family']:<14}", "|", " > ".join(x["tool"].replace("verify_identity", "verify").replace("create_promise", "promise") for x in led["calls"]) or "(no tool calls)")
+        rows.append({"id": c["id"], "level": c.get("level", ""), "family": c.get("family", ""), "pass": r["pass"], "failed": r["failed"], "call_id": j.get("callId"), "tools": [x.get("tool") for x in led.get("calls") or []], "customer_id": sessions[c["id"]]["customer_id"]})
+        print(("PASS" if r["pass"] else "FAIL"), c["id"], f"{c.get('level', ''):<6}", f"{c.get('family', ''):<14}", "|", " > ".join(x["tool"].replace("verify_identity", "verify").replace("create_promise", "promise") for x in led.get("calls") or []) or "(no tool calls)")
         for f in r["failed"]: print("       -", f[:260])
     # How long the phone agent kept the customer waiting. A call whose customer hung up after long silences says
     # something about the speed of the model at that moment, not only about the agent.

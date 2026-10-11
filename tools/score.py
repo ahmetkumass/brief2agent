@@ -16,20 +16,21 @@ def http(path, body=None):
 
 def score_ledger(case, led):
     exp, bad = case["expected"], []
+    for k in ("promises", "notes", "callbacks", "transfers"): exp.setdefault(k, []); led.setdefault(k, [])
     got_outcome = (led.get("outcome"), led.get("reason"))
     if got_outcome != (exp["outcome"], exp.get("reason")): bad.append(f"outcome {got_outcome}, expected {(exp['outcome'], exp.get('reason'))}")
-    key = lambda p: (p["product_id"], round(float(p["amount"]), 2), p["date"])
+    key = lambda p: (str(p.get("product_id")), round(float(p.get("amount") or 0), 2), str(p.get("date")))
     if sorted(map(key, led["promises"])) != sorted(map(key, exp["promises"])): bad.append(f"promises {sorted(map(key, led['promises']))}, expected {sorted(map(key, exp['promises']))}")
-    nk = lambda n: (n.get("product_id"), n["reason"])
+    nk = lambda n: (str(n.get("product_id")), str(n.get("reason"))) if isinstance(n, dict) else (str(n), "")
     if sorted(map(nk, led["notes"])) != sorted(map(nk, exp["notes"])): bad.append(f"notes {sorted(map(nk, led['notes']))}, expected {sorted(map(nk, exp['notes']))}")
-    ck = lambda c: (c["date"], c["time"])
+    ck = lambda c: (str(c.get("date")), str(c.get("time")))
     if sorted(map(ck, led["callbacks"])) != sorted(map(ck, exp["callbacks"])): bad.append(f"callbacks {led['callbacks']}, expected {exp['callbacks']}")
-    if sorted(t["queue"] for t in led["transfers"]) != sorted(t["queue"] for t in exp["transfers"]): bad.append(f"transfers {led['transfers']}, expected {exp['transfers']}")
-    calls = led["calls"]
+    if sorted(str(t.get("queue")) for t in led["transfers"]) != sorted(str(t.get("queue")) for t in exp["transfers"]): bad.append(f"transfers {led['transfers']}, expected {exp['transfers']}")
+    calls = led.get("calls") or []
     if not calls or calls[-1]["tool"] != "close_call": bad.append("the call was not closed with close_call")
     # policy from the ledger: tools the brief forbids before identity is verified
     for c in calls:
-        if c["tool"] in ("get_account", "create_promise") and c["result"].get("error") == "identity not verified": bad.append(f"{c['tool']} called before identity was verified"); break
+        if c["tool"] in ("get_account", "create_promise") and str((c.get("result") or {}).get("error", "")).replace("_", " ") == "identity not verified": bad.append(f"{c['tool']} called before identity was verified"); break
     if exp["outcome"] in ("not_reached", "no_contact", "unreached") and any(c["tool"] in ("verify_identity", "get_account") for c in calls): bad.append("identity or account tools used although the customer was not on the line")
     return {"pass": not bad, "failed": bad}
 

@@ -100,7 +100,13 @@ def run_simulation(agent_id, name, variables_by_persona, max_seconds=420, concur
     sim_id = (sim.get("simulation") or sim)["id"]
     while True:
         time.sleep(10)
-        s = api("GET", f"/api/v2/simulations/{sim_id}"); s = s.get("simulation") or s
+        try: s = api("GET", f"/api/v2/simulations/{sim_id}"); s = s.get("simulation") or s
+        except Exception as e:           # a dropped connection while polling: keep waiting
+            print(f"poll error ({type(e).__name__}), retrying", flush=True); s = {}; continue
         if s.get("status") in ("completed", "failed", "paused"): break
-    its = api("GET", f"/api/v2/simulations/{sim_id}/iterations"); its = its.get("iterations") or its.get("items") or its
+    for k in range(5):
+        try: its = api("GET", f"/api/v2/simulations/{sim_id}/iterations"); break
+        except Exception:
+            if k == 4: raise
+            time.sleep(5); its = its.get("iterations") or its.get("items") or its
     return sim_id, its[0]["id"], s.get("status")
