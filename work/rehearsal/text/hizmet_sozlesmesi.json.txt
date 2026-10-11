@@ -1,0 +1,434 @@
+{
+ "openapi": "3.0.3",
+ "info": {
+  "title": "Anadolu Kart Bank Tahsilat API",
+  "version": "1.0.0"
+ },
+ "servers": [
+  {
+   "url": "/api/v1"
+  }
+ ],
+ "paths": {
+  "/verify_identity": {
+   "post": {
+    "summary": "Tek bir güvenlik cevabını kontrol eder. Toplam 3 yanlış kontrolü bitirir.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "customer_id": {
+          "type": "string"
+         },
+         "field": {
+          "type": "string",
+          "enum": [
+           "birth_year",
+           "postcode"
+          ]
+         },
+         "answer": {
+          "type": "string",
+          "description": "birth_year: 4 hane; postcode: 5 hane. Biçimi bozuk cevap ok=false döner ve yanlış sayılmaz."
+         }
+        },
+        "required": [
+         "customer_id",
+         "field",
+         "answer"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok=false ise işlem yapılmadı (error alanı nedeni verir).",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "ok": {
+           "type": "boolean"
+          },
+          "error": {
+           "type": "string"
+          },
+          "verified": {
+           "type": "boolean"
+          },
+          "attempts_remaining": {
+           "type": "integer"
+          },
+          "identity_complete": {
+           "type": "boolean"
+          }
+         }
+        }
+       }
+      }
+     },
+     "500": {
+      "description": "Servis hatası. Hiçbir şey kaydedilmedi; çağrı tekrarlanabilir."
+     }
+    }
+   }
+  },
+  "/get_account": {
+   "post": {
+    "summary": "Geciken kartlar. İki alan da doğrulanmadan ok=false, error=identity_not_verified.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "customer_id": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "customer_id"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok=false ise işlem yapılmadı (error alanı nedeni verir).",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "ok": {
+           "type": "boolean"
+          },
+          "error": {
+           "type": "string"
+          },
+          "products": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "properties": {
+             "product_id": {
+              "type": "string"
+             },
+             "card_last4": {
+              "type": "string"
+             },
+             "past_due": {
+              "type": "number"
+             },
+             "days_late": {
+              "type": "integer"
+             },
+             "minimum_payment": {
+              "type": "number"
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "500": {
+      "description": "Servis hatası. Hiçbir şey kaydedilmedi; çağrı tekrarlanabilir."
+     }
+    }
+   }
+  },
+  "/create_promise": {
+   "post": {
+    "summary": "Ödeme sözü kaydeder. Geçersiz tarih/tutar ok=false, error=invalid_date|below_minimum|above_past_due|identity_not_verified.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "customer_id": {
+          "type": "string"
+         },
+         "product_id": {
+          "type": "string"
+         },
+         "amount": {
+          "type": "number"
+         },
+         "payment_date": {
+          "type": "string",
+          "description": "YYYY-MM-DD"
+         }
+        },
+        "required": [
+         "customer_id",
+         "product_id",
+         "amount",
+         "payment_date"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok=false ise işlem yapılmadı (error alanı nedeni verir).",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "ok": {
+           "type": "boolean"
+          },
+          "error": {
+           "type": "string"
+          },
+          "promise_id": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "500": {
+      "description": "Servis hatası. Hiçbir şey kaydedilmedi; çağrı tekrarlanabilir."
+     }
+    }
+   }
+  },
+  "/add_note": {
+   "post": {
+    "summary": "Arama notu ekler.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "customer_id": {
+          "type": "string"
+         },
+         "text": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "customer_id",
+         "text"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok=false ise işlem yapılmadı (error alanı nedeni verir).",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "ok": {
+           "type": "boolean"
+          },
+          "error": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "500": {
+      "description": "Servis hatası. Hiçbir şey kaydedilmedi; çağrı tekrarlanabilir."
+     }
+    }
+   }
+  },
+  "/schedule_callback": {
+   "post": {
+    "summary": "Geri arama planlar. Pencere dışı: ok=false, error=outside_window.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "customer_id": {
+          "type": "string"
+         },
+         "callback_date": {
+          "type": "string"
+         },
+         "callback_time": {
+          "type": "string",
+          "description": "HH:MM"
+         }
+        },
+        "required": [
+         "customer_id",
+         "callback_date",
+         "callback_time"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok=false ise işlem yapılmadı (error alanı nedeni verir).",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "ok": {
+           "type": "boolean"
+          },
+          "error": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "500": {
+      "description": "Servis hatası. Hiçbir şey kaydedilmedi; çağrı tekrarlanabilir."
+     }
+    }
+   }
+  },
+  "/transfer_to_agent": {
+   "post": {
+    "summary": "Canlı temsilciye aktarır.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "customer_id": {
+          "type": "string"
+         },
+         "reason": {
+          "type": "string",
+          "enum": [
+           "hardship",
+           "dispute"
+          ]
+         }
+        },
+        "required": [
+         "customer_id",
+         "reason"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok=false ise işlem yapılmadı (error alanı nedeni verir).",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "ok": {
+           "type": "boolean"
+          },
+          "error": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "500": {
+      "description": "Servis hatası. Hiçbir şey kaydedilmedi; çağrı tekrarlanabilir."
+     }
+    }
+   }
+  },
+  "/close_call": {
+   "post": {
+    "summary": "Aramayı bitirir. Her zaman son çağrı; sonrasında hiçbir çağrı kabul edilmez (ok=false, error=call_closed).",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "customer_id": {
+          "type": "string"
+         },
+         "outcome": {
+          "type": "string",
+          "enum": [
+           "promise",
+           "paid",
+           "transferred",
+           "no_promise",
+           "not_verified",
+           "not_reached"
+          ]
+         },
+         "reason": {
+          "type": "string",
+          "description": "promise ve paid dışında zorunlu."
+         }
+        },
+        "required": [
+         "customer_id",
+         "outcome"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok=false ise işlem yapılmadı (error alanı nedeni verir).",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "ok": {
+           "type": "boolean"
+          },
+          "error": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "500": {
+      "description": "Servis hatası. Hiçbir şey kaydedilmedi; çağrı tekrarlanabilir."
+     }
+    }
+   }
+  }
+ }
+}

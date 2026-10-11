@@ -1,0 +1,16 @@
+HIZMET SOZLESMESI OZETI (Anadolu Kart Bank Tahsilat API v1, taban yol /api/v1)
+Tum uclar POST, JSON. Yanitta ok=false ise islem yapilmadi (error alani); HTTP 5
+00 ise hicbir sey kaydedilmedi, tekrar denenebilir.
+verify_identity: customer_id, field (birth_year|postcode), answer. Yanit: verifi
+ed, attempts_remaining, identity_complete.
+get_account: customer_id. Yanit: products[product_id, card_last4, past_due, days
+_late, minimum_payment]. Kimlik tamamlanmadan reddedilir.
+create_promise: customer_id, product_id, amount, payment_date (YYYY-MM-DD). Yani
+t: promise_id. Hatalar: invalid_date, below_minimum, above_past_due.
+add_note: customer_id, text.
+schedule_callback: customer_id, callback_date, callback_time (HH:MM). Hata: outs
+ide_window.
+transfer_to_agent: customer_id, reason (hardship|dispute).
+close_call: customer_id, outcome, reason. Son cagri; sonrasi call_closed.
+Tam sema icin hizmet_sozlesmesi.json dosyasina bakin.
+

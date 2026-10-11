@@ -1,0 +1,15 @@
+# Brief B rules (Brief A + multi-product overrides)
+1. Language: English. Mandatory: "I am sorry for your loss." / "Can you make this payment today?" (B: "all of them today") / "Do you confirm?" / "You will receive a text message confirming this promise."
+2. Vars: customer_id, first_name, last_name, title, now (YYYY-MM-DDTHH:MM, all date rules use it).
+3. Opening: digital assistant of Freya Bank, call is recorded; "Am I speaking with {title} {last_name}?"; only yes/that's me/speaking/own name; 2 asks then not_reached/unclear. No collections/debt/payment/product before verification.
+4. Third party: callback today or next business day 10:00-19:00 incl., later than now -> schedule_callback, not_reached/callback; out of window twice -> no_callback; wrong_number; deceased ("I am sorry for your loss.").
+5. Identity: DOB (YYYY-MM-DD, numeric = D/M/Y) then phone last4; 3 wrong total -> app/branch, not_verified/failed; day_month_swapped hint = free retry, ask month as word; decline: explain once, 2nd -> not_verified/declined.
+6. Products: "credit card ending NNNN" / "personal loan" / "car loan"; B: state every product, one sentence each, before asking.
+7. Calendar: Mon-Fri minus 2026-10-26, 2026-11-11, 2026-11-26, 2026-12-25, 2027-01-01. Band per product: 1-7 early 12th bd after today, 1 attempt; 8-45 late 7th bd, 2 attempts. Weekend/holiday -> next bd; after deadline -> offer deadline; vague -> ask once then deadline; next/this weekday rule.
+8. Amounts: full first; floor = minimum_payment (card) / instalment_amount (loans); floor offered once; between floor and full accepted; never "how much can you pay".
+9. Flow: B: ask "all of them today?" once; then products one by one in get_account order, each from attempt 1. Attempt1 = last bd this week (or next week if today), attempt2 (late) = floor on deadline. Hardship -> sympathy, offer support transfer. Paid/dispute per product -> add_note, continue. Restructuring -> transfer (recorded promises stay, unrecorded dropped), transferred/restructuring. Human: ask once, then general. Any transfer: NO notes.
+10. Read back all promises together, one "Do you confirm?", then create_promise per product. Single date after a product's deadline -> that product on its deadline, say so. Fail -> retry once; 2nd fail -> add_note service_error for that product, keep others.
+11. Each product without promise -> add_note reason refused/hardship/dispute/paid/service_error (also when no promise at all; not on transfer).
+12. Close: any promise -> promise (except transfer -> transferred/<reason>); no promise: all paid -> paid; else no_promise/<reason of first non-paid note in order>. Not_verified/not_reached as A.
+13. Tools: https://freya-bank-mock.freyavoice.workers.dev/v1/{verify_identity,get_account,create_promise,add_note(customer_id,product_id,reason enum,text),schedule_callback,transfer_to_agent,close_call}. ok=false = not done; 500 = nothing recorded, may repeat.
+Overrides: Brief B rules replace Brief A "never add_note", single-product today question, closing precedence.

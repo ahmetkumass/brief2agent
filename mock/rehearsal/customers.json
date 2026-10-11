@@ -1,0 +1,168 @@
+{
+ "customers": [
+  {
+   "customer_id": "AK-1001",
+   "case": "AK-1001",
+   "identity": {
+    "birth_year": "1985",
+    "postcode": "34710"
+   },
+   "variables": {
+    "customer_id": "AK-1001",
+    "ad": "Mehmet",
+    "soyad": "Yılmaz",
+    "unvan": "Bay",
+    "first_name": "Mehmet",
+    "last_name": "Yılmaz",
+    "now": "2026-10-14T11:00"
+   },
+   "products": [
+    {
+     "product_id": "P-1001-1",
+     "card_last4": "4417",
+     "past_due": 4800,
+     "days_late": 12,
+     "minimum_payment": 1250
+    }
+   ]
+  },
+  {
+   "customer_id": "AK-1002",
+   "case": "AK-1002",
+   "identity": {
+    "birth_year": "1979",
+    "postcode": "06520"
+   },
+   "variables": {
+    "customer_id": "AK-1002",
+    "ad": "Ayşe",
+    "soyad": "Demir",
+    "unvan": "Bayan",
+    "first_name": "Ayşe",
+    "last_name": "Demir",
+    "now": "2026-10-14T20:10"
+   },
+   "products": [
+    {
+     "product_id": "P-1002-1",
+     "card_last4": "9034",
+     "past_due": 2300,
+     "days_late": 25,
+     "minimum_payment": 600
+    }
+   ]
+  },
+  {
+   "customer_id": "AK-1003",
+   "case": "AK-1003",
+   "identity": {
+    "birth_year": "1991",
+    "postcode": "35040"
+   },
+   "variables": {
+    "customer_id": "AK-1003",
+    "ad": "Can",
+    "soyad": "Kaya",
+    "unvan": "Bay",
+    "first_name": "Can",
+    "last_name": "Kaya",
+    "now": "2026-10-15T10:00"
+   },
+   "products": [
+    {
+     "product_id": "P-1003-1",
+     "card_last4": "2288",
+     "past_due": 7150,
+     "days_late": 8,
+     "minimum_payment": 1900
+    }
+   ]
+  },
+  {
+   "customer_id": "AK-1004",
+   "case": "AK-1004",
+   "identity": {
+    "birth_year": "1988",
+    "postcode": "16210"
+   },
+   "variables": {
+    "customer_id": "AK-1004",
+    "ad": "Elif",
+    "soyad": "Şahin",
+    "unvan": "Bayan",
+    "first_name": "Elif",
+    "last_name": "Şahin",
+    "now": "2026-10-27T10:30"
+   },
+   "products": [
+    {
+     "product_id": "P-1004-1",
+     "card_last4": "7751",
+     "past_due": 3100,
+     "days_late": 20,
+     "minimum_payment": 900
+    }
+   ]
+  },
+  {
+   "customer_id": "AK-1005",
+   "case": "AK-1005",
+   "identity": {
+    "birth_year": "1974",
+    "postcode": "01330"
+   },
+   "variables": {
+    "customer_id": "AK-1005",
+    "ad": "Burak",
+    "soyad": "Çelik",
+    "unvan": "Bay",
+    "first_name": "Burak",
+    "last_name": "Çelik",
+    "now": "2026-10-16T15:00"
+   },
+   "products": [
+    {
+     "product_id": "P-1005-1",
+     "card_last4": "6120",
+     "past_due": 5600,
+     "days_late": 40,
+     "minimum_payment": 1500
+    }
+   ]
+  },
+  {
+   "customer_id": "AK-1006",
+   "case": "AK-1006",
+   "identity": {
+    "birth_year": "1995",
+    "postcode": "42050"
+   },
+   "variables": {
+    "customer_id": "AK-1006",
+    "ad": "Zeynep",
+    "soyad": "Arslan",
+    "unvan": "Bayan",
+    "first_name": "Zeynep",
+    "last_name": "Arslan",
+    "now": "2026-10-13T14:00"
+   },
+   "products": [
+    {
+     "product_id": "P-1006-1",
+     "card_last4": "3309",
+     "past_due": 8200,
+     "days_late": 45,
+     "minimum_payment": 2100
+    },
+    {
+     "product_id": "P-1006-2",
+     "card_last4": "5580",
+     "past_due": 1400,
+     "days_late": 10,
+     "minimum_payment": 350
+    }
+   ],
+   "fail_create_promise": 1
+  }
+ ]
+}

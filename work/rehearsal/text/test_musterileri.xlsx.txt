@@ -1,0 +1,9 @@
+### Sheet: test_musterileri
+| customer_id | ad | soyad | unvan | birth_year | postcode | product_id | card_last4 | past_due_TL | days_late | minimum_payment_TL | now | not |
+| AK-1001 | Mehmet | Yılmaz | Bay | 1985 | 34710 | P-1001-1 | 4417 | 4800 | 12 | 1250 | 2026-10-14T11:00 |  |
+| AK-1002 | Ayşe | Demir | Bayan | 1979 | 06520 | P-1002-1 | 9034 | 2300 | 25 | 600 | 2026-10-14T20:10 | Telefonu eşi açar |
+| AK-1003 | Can | Kaya | Bay | 1991 | 35040 | P-1003-1 | 2288 | 7150 | 8 | 1900 | 2026-10-15T10:00 | Kimlik yanlış girilir |
+| AK-1004 | Elif | Şahin | Bayan | 1988 | 16210 | P-1004-1 | 7751 | 3100 | 20 | 900 | 2026-10-27T10:30 | Bayram tarihi tuzağı (2026-10-29) |
+| AK-1005 | Burak | Çelik | Bay | 1974 | 01330 | P-1005-1 | 6120 | 5600 | 40 | 1500 | 2026-10-16T15:00 | Zorluk: işsizlik; 31-60 bandı |
+| AK-1006 | Zeynep | Arslan | Bayan | 1995 | 42050 | P-1006-1 | 3309 | 8200 | 45 | 2100 | 2026-10-13T14:00 | ilk create_promise çağrısı hata verir |
+| AK-1006 | Zeynep | Arslan | Bayan | 1995 | 42050 | P-1006-2 | 5580 | 1400 | 10 | 350 | 2026-10-13T14:00 | İkinci kart, aynı müşteri |

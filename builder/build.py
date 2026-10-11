@@ -67,13 +67,20 @@ async def run(args):
     for r in idx: tr.line(f"  file {r['file']} ({r['chars']} chars)")
 
     model = os.environ.get("BUILDER_MODEL", "claude-opus-5-5")
+    mock_note = ""
+    if args.mock_url and not args.practice:
+        host = args.mock_url.split("//", 1)[-1].split("/", 1)[0]
+        mock_note = (f"\n  The bank service the agent calls must be OUR mock at this url. Use the bank-mock skill: deploy the worker so it is served "
+                     f"at host {host} (wrangler name = '{host.split('.')[0]}', it is created or updated in place), with the paths of this brief's "
+                     f"service contract. Tool base URL = mock_url if it already ends with the contract's base path, else mock_url + that base path. "
+                     f"Smoke-test it before building the agent's tools on it.")
     deadline = time.strftime("%H:%M", time.localtime(t0 + BUDGET_MIN * 60))
     prompt = f"""Build a Freya phone agent for this bank brief. Use the build-phone-agent skill and follow it exactly.
 
 slot: {slot}
 brief documents (converted to text): {work / 'corpus.md'} (one file per section; originals listed in {work / 'index.json'})
 original inputs: {', '.join(str(p) for p in inputs)}
-mock_url: {args.mock_url or '(none given)'}
+mock_url: {args.mock_url or '(none given)'}{mock_note}
 practice set: {args.practice or '(none: this is not a practice brief, use the self-test path of the skill)'}
 time budget: you must be completely finished by {deadline} local time ({BUDGET_MIN} minutes from now). Check the clock with `date` before every test.
 

@@ -1,0 +1,10 @@
+Politika Güncelleme Notu TAH-2026/14
+No: TAH-2026/14
+Tarih: 2026-10-01
+Konu: Gecikmiş kart borcu tahsilat araması, 31-60 gün bandı
+Bu not, BRIEF.md bölüm 7 madde 16'daki tabloyu aşağıdaki şekilde DEĞİŞTİRİR. Çakışmada bu not geçerlidir.
+Eski kural: 31-60 gün gecikmede en geç söz tarihi 3 iş günü.
+Yeni kural: 31-60 gün gecikmede en geç söz tarihi 2 iş günü.
+1-30 gün bandı (5 iş günü), asgari ödeme tabanı, tatil listesi ve diğer tüm kurallar değişmemiştir.
+Gerekçe: Gecikmesi 30 günü aşan hesaplarda temerrüt riski nedeniyle ödeme süresi kısaltılmıştır.
+Yürürlük: 2026-10-01 ve sonrası tüm aramalar.
