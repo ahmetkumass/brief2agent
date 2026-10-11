@@ -11,7 +11,7 @@
     }
   ],
   "repo": "https://github.com/ahmetkumass/brief2agent",
-  "commit": "0cc525f5be33f996ec792fd49a49fde4ed6900ca",
+  "commit": "020a76dbb096bc29ae59930713aae909caa46fb3",
   "run_command": "python3 builder/build.py {case_folder} {mock_url} --slot final --deploy-mock",
   "workflow": "submissions/final.workflow.json",
   "trace": "traces/final.log",
