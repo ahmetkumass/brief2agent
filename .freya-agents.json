@@ -16,5 +16,9 @@
   "workflow_id": "c68c0fd0-c120-458c-800e-133e6bdeadaa",
   "agent_id": "c85d308a-45b6-4443-9896-e38247f44655",
   "version": 4
+ },
+ "rehearsal2": {
+  "workflow_id": "ac5479cd-a65e-4f21-ab9f-e25da31a8f5b",
+  "agent_id": "5b1a71dd-6350-4a86-88fa-30158cc00e23"
  }
 }

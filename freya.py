@@ -108,5 +108,7 @@ def run_simulation(agent_id, name, variables_by_persona, max_seconds=420, concur
         try: its = api("GET", f"/api/v2/simulations/{sim_id}/iterations"); break
         except Exception:
             if k == 4: raise
-            time.sleep(5); its = its.get("iterations") or its.get("items") or its
+            time.sleep(5)
+    if isinstance(its, dict): its = its.get("iterations") or its.get("items") or its.get("data") or []
+    if not its: raise RuntimeError(f"simulation {sim_id} status={s.get('status')} has no iterations")
     return sim_id, its[0]["id"], s.get("status")

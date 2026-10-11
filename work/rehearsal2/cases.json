@@ -1,0 +1,313 @@
+[
+ {
+  "id": "AK-1001",
+  "brief": "final",
+  "language": "Turkish",
+  "family": "Happy path",
+  "level": "medium",
+  "title": "Pays 2000 TL on 20 Oct",
+  "variables": {
+   "customer_id": "AK-1001",
+   "ad": "Mehmet",
+   "soyad": "Yılmaz",
+   "unvan": "Bay",
+   "now": "2026-10-14T11:00",
+   "first_name": "Mehmet",
+   "last_name": "Yılmaz",
+   "title": "Bay"
+  },
+  "identity": {
+   "birth_year": "1985",
+   "postcode": "34710"
+  },
+  "products": [
+   {
+    "product_id": "P-1001-1",
+    "type": "credit_card",
+    "card_last4": "4417",
+    "past_due": 4800,
+    "days_late": 12,
+    "minimum_payment": 1250
+   }
+  ],
+  "script": "Türkçe konuşur. 'Evet, benim' der. Doğum yılı 1985, posta kodu 34710. Borç söylenince '20 Ekim'de 2.000 TL öderim' der. Okumada onaylar.",
+  "expected": {
+   "outcome": "promise",
+   "reason": null,
+   "promises": [
+    {
+     "product_id": "P-1001-1",
+     "amount": 2000.0,
+     "date": "2026-10-20"
+    }
+   ],
+   "notes": [],
+   "callbacks": [],
+   "transfers": []
+  },
+  "checks": [
+   "SMS sentence said after the promise",
+   "no forbidden words before verification"
+  ]
+ },
+ {
+  "id": "AK-1002",
+  "brief": "final",
+  "language": "Turkish",
+  "family": "Third party",
+  "level": "medium",
+  "title": "Spouse answers, callback tomorrow 12",
+  "variables": {
+   "customer_id": "AK-1002",
+   "ad": "Ayşe",
+   "soyad": "Demir",
+   "unvan": "Bayan",
+   "now": "2026-10-14T20:10",
+   "first_name": "Ayşe",
+   "last_name": "Demir",
+   "title": "Bayan"
+  },
+  "identity": {
+   "birth_year": "1979",
+   "postcode": "06520"
+  },
+  "products": [
+   {
+    "product_id": "P-1002-1",
+    "type": "credit_card",
+    "card_last4": "9034",
+    "past_due": 2300,
+    "days_late": 25,
+    "minimum_payment": 600
+   }
+  ],
+  "script": "Türkçe konuşur. Ayşe Demir'in eşidir: 'Hayır, ben eşiyim' der. Ne zaman ulaşılabileceği sorulunca 'Yarın saat 12'de' der. Neden aradıklarını sorar.",
+  "expected": {
+   "outcome": "not_reached",
+   "reason": "callback",
+   "promises": [],
+   "notes": [],
+   "callbacks": [
+    {
+     "date": "2026-10-15",
+     "time": "12:00"
+    }
+   ],
+   "transfers": []
+  },
+  "checks": [
+   "no debt/card words to third party"
+  ]
+ },
+ {
+  "id": "AK-1003",
+  "brief": "final",
+  "language": "Turkish",
+  "family": "Identity",
+  "level": "medium",
+  "title": "Wrong identity three times",
+  "variables": {
+   "customer_id": "AK-1003",
+   "ad": "Can",
+   "soyad": "Kaya",
+   "unvan": "Bay",
+   "now": "2026-10-15T10:00",
+   "first_name": "Can",
+   "last_name": "Kaya",
+   "title": "Bay"
+  },
+  "identity": {
+   "birth_year": "1991",
+   "postcode": "35040"
+  },
+  "products": [
+   {
+    "product_id": "P-1003-1",
+    "type": "credit_card",
+    "card_last4": "2288",
+    "past_due": 7150,
+    "days_late": 8,
+    "minimum_payment": 1900
+   }
+  ],
+  "script": "Türkçe konuşur. 'Evet benim' der. Doğum yılını 1990 söyler. Posta kodu sorulunca 06100 der. Doğum yılı tekrar sorulursa 1989 der; başka ne sorulursa yanlış cevap verir.",
+  "expected": {
+   "outcome": "not_verified",
+   "reason": "failed_identity",
+   "promises": [],
+   "notes": [],
+   "callbacks": [],
+   "transfers": []
+  },
+  "checks": [
+   "no account info given"
+  ]
+ },
+ {
+  "id": "AK-1004",
+  "brief": "final",
+  "language": "Turkish",
+  "family": "Dates",
+  "level": "medium",
+  "title": "Holiday trap 29 Oct",
+  "variables": {
+   "customer_id": "AK-1004",
+   "ad": "Elif",
+   "soyad": "Şahin",
+   "unvan": "Bayan",
+   "now": "2026-10-27T10:30",
+   "first_name": "Elif",
+   "last_name": "Şahin",
+   "title": "Bayan"
+  },
+  "identity": {
+   "birth_year": "1988",
+   "postcode": "16210"
+  },
+  "products": [
+   {
+    "product_id": "P-1004-1",
+    "type": "credit_card",
+    "card_last4": "7751",
+    "past_due": 3100,
+    "days_late": 20,
+    "minimum_payment": 900
+   }
+  ],
+  "script": "Türkçe konuşur. 'Evet benim'. Doğum yılı 1988, posta kodu 16210. Önce '29 Ekim'de öderim' der. Tatil denince '30 Ekim'de 900 TL' der. Okumada onaylar.",
+  "expected": {
+   "outcome": "promise",
+   "reason": null,
+   "promises": [
+    {
+     "product_id": "P-1004-1",
+     "amount": 900.0,
+     "date": "2026-10-30"
+    }
+   ],
+   "notes": [],
+   "callbacks": [],
+   "transfers": []
+  },
+  "checks": [
+   "holiday rejected",
+   "SMS sentence"
+  ]
+ },
+ {
+  "id": "AK-1005",
+  "brief": "final",
+  "language": "Turkish",
+  "family": "Hardship",
+  "level": "medium",
+  "title": "Lost job",
+  "variables": {
+   "customer_id": "AK-1005",
+   "ad": "Burak",
+   "soyad": "Çelik",
+   "unvan": "Bay",
+   "now": "2026-10-16T15:00",
+   "first_name": "Burak",
+   "last_name": "Çelik",
+   "title": "Bay"
+  },
+  "identity": {
+   "birth_year": "1974",
+   "postcode": "01330"
+  },
+  "products": [
+   {
+    "product_id": "P-1005-1",
+    "type": "credit_card",
+    "card_last4": "6120",
+    "past_due": 5600,
+    "days_late": 40,
+    "minimum_payment": 1500
+   }
+  ],
+  "script": "Türkçe konuşur. 'Evet benim'. Doğum yılı 1974, posta kodu 01330. Borç söylenince 'İşimi kaybettim, ödeyemem' der.",
+  "expected": {
+   "outcome": "transferred",
+   "reason": "hardship",
+   "promises": [],
+   "notes": [
+    {
+     "contains": "iş"
+    }
+   ],
+   "callbacks": [],
+   "transfers": [
+    {
+     "reason": "hardship"
+    }
+   ]
+  },
+  "checks": [
+   "no persuasion"
+  ]
+ },
+ {
+  "id": "AK-1006",
+  "brief": "final",
+  "language": "Turkish",
+  "family": "Tool error",
+  "level": "medium",
+  "title": "Two cards, first create_promise fails",
+  "variables": {
+   "customer_id": "AK-1006",
+   "ad": "Zeynep",
+   "soyad": "Arslan",
+   "unvan": "Bayan",
+   "now": "2026-10-13T14:00",
+   "first_name": "Zeynep",
+   "last_name": "Arslan",
+   "title": "Bayan"
+  },
+  "identity": {
+   "birth_year": "1995",
+   "postcode": "42050"
+  },
+  "products": [
+   {
+    "product_id": "P-1006-1",
+    "type": "credit_card",
+    "card_last4": "3309",
+    "past_due": 8200,
+    "days_late": 45,
+    "minimum_payment": 2100
+   },
+   {
+    "product_id": "P-1006-2",
+    "type": "credit_card",
+    "card_last4": "5580",
+    "past_due": 1400,
+    "days_late": 10,
+    "minimum_payment": 350
+   }
+  ],
+  "script": "Türkçe konuşur. 'Evet benim'. Doğum yılı 1995, posta kodu 42050. Sonu 3309 olan kart için '15 Ekim'de 2.100 TL' der. Sonu 5580 olan kart için '20 Ekim'de 1.400 TL' der. Okumalarda onaylar.",
+  "expected": {
+   "outcome": "promise",
+   "reason": null,
+   "promises": [
+    {
+     "product_id": "P-1006-1",
+     "amount": 2100.0,
+     "date": "2026-10-15"
+    },
+    {
+     "product_id": "P-1006-2",
+     "amount": 1400.0,
+     "date": "2026-10-20"
+    }
+   ],
+   "notes": [],
+   "callbacks": [],
+   "transfers": []
+  },
+  "checks": [
+   "retry once after error",
+   "SMS only after success"
+  ]
+ }
+]

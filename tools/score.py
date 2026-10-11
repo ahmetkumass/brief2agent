@@ -22,10 +22,12 @@ def score_ledger(case, led):
     key = lambda p: (str(p.get("product_id")), round(float(p.get("amount") or 0), 2), str(p.get("date")))
     if sorted(map(key, led["promises"])) != sorted(map(key, exp["promises"])): bad.append(f"promises {sorted(map(key, led['promises']))}, expected {sorted(map(key, exp['promises']))}")
     nk = lambda n: (str(n.get("product_id")), str(n.get("reason"))) if isinstance(n, dict) else (str(n), "")
+    if not any(isinstance(n, dict) and n.get("reason") for n in exp["notes"]):   # self-made case without a note reason code: compare products only
+        nk = lambda n: (str(n.get("product_id")), "") if isinstance(n, dict) else ("None", "")
     if sorted(map(nk, led["notes"])) != sorted(map(nk, exp["notes"])): bad.append(f"notes {sorted(map(nk, led['notes']))}, expected {sorted(map(nk, exp['notes']))}")
     ck = lambda c: (str(c.get("date")), str(c.get("time")))
     if sorted(map(ck, led["callbacks"])) != sorted(map(ck, exp["callbacks"])): bad.append(f"callbacks {led['callbacks']}, expected {exp['callbacks']}")
-    if sorted(str(t.get("queue")) for t in led["transfers"]) != sorted(str(t.get("queue")) for t in exp["transfers"]): bad.append(f"transfers {led['transfers']}, expected {exp['transfers']}")
+    if sorted(str(t.get("queue") or t.get("reason")) for t in led["transfers"]) != sorted(str(t.get("queue") or t.get("reason")) for t in exp["transfers"]): bad.append(f"transfers {led['transfers']}, expected {exp['transfers']}")
     calls = led.get("calls") or []
     if not calls or calls[-1]["tool"] != "close_call": bad.append("the call was not closed with close_call")
     # policy from the ledger: tools the brief forbids before identity is verified
