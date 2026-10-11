@@ -68,12 +68,19 @@ async def run(args):
 
     model = os.environ.get("BUILDER_MODEL", "claude-opus-5-5")
     mock_note = ""
-    if args.mock_url and not args.practice:
+    if args.mock_url and not args.practice and args.deploy_mock:
         host = args.mock_url.split("//", 1)[-1].split("/", 1)[0]
         mock_note = (f"\n  The bank service the agent calls must be OUR mock at this url. Use the bank-mock skill: deploy the worker so it is served "
                      f"at host {host} (wrangler name = '{host.split('.')[0]}', it is created or updated in place), with the paths of this brief's "
                      f"service contract. Tool base URL = mock_url if it already ends with the contract's base path, else mock_url + that base path. "
                      f"Smoke-test it before building the agent's tools on it.")
+    elif args.mock_url and not args.practice:
+        mock_note = ("\n  This mock_url is the bank service, already running: do NOT deploy a mock. The tools call it. Tool base URL = mock_url if it "
+                     "already ends with the contract's base path, else mock_url + that base path. First curl one harmless endpoint to see the real "
+                     "path and response shape. For self-tests: if it serves /v1/practice/sessions use run_cases against it; otherwise test with "
+                     "scripted chats (builder/chat_smoke.py --script) against the given mock_url.")
+    elif not args.practice:
+        mock_note = "\n  No mock_url: deploy our own mock with the bank-mock skill and use its url."
     deadline = time.strftime("%H:%M", time.localtime(t0 + BUDGET_MIN * 60))
     prompt = f"""Build a Freya phone agent for this bank brief. Use the build-phone-agent skill and follow it exactly.
 
@@ -136,6 +143,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("inputs", nargs="+", help="a case folder, or brief files")
     ap.add_argument("--slot"); ap.add_argument("--practice", choices=["A", "B"])
+    ap.add_argument("--deploy-mock", action="store_true", help="deploy our own mock at mock_url (when the organisers do not run one)")
     a = ap.parse_args()
     # a trailing http(s) argument is the mock url
     a.mock_url = next((x for x in a.inputs if x.startswith("http")), None)
