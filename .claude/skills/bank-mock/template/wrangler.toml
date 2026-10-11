@@ -1,0 +1,7 @@
+name = "freya-bank-mock-slot"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+[[kv_namespaces]]
+binding = "LEDGER"
+id = "PUT_KV_ID_HERE"
