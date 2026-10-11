@@ -1,0 +1,19 @@
+{
+  "team": "Brief2Agent",
+  "members": [
+    {
+      "name": "Ahmet Kumas",
+      "email": "ahmetkumas@outlook.com"
+    },
+    {
+      "name": "Çağrı Kumaş",
+      "email": "kumascagri@gmail.com"
+    }
+  ],
+  "repo": "https://github.com/ahmetkumass/brief2agent",
+  "commit": "0cc525f5be33f996ec792fd49a49fde4ed6900ca",
+  "run_command": "python3 builder/build.py {case_folder} {mock_url} --slot final --deploy-mock",
+  "workflow": "submissions/final.workflow.json",
+  "trace": "traces/final.log",
+  "mock_url": "https://freya-bank-final.ahmetkumas-freya.workers.dev"
+}
