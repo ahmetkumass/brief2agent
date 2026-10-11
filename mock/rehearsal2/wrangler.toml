@@ -1,0 +1,11 @@
+name = "freya-bank-rehearsal2"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+[[durable_objects.bindings]]
+name = "BANK"
+class_name = "Bank"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Bank"]
