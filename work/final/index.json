@@ -1,0 +1,92 @@
+[
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/BRIEF.md",
+  "chars": 4566,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/BRIEF.md.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/README.md",
+  "chars": 1300,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/README.md.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/cloudflare-mock/README.md",
+  "chars": 3202,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/README.md.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/cloudflare-mock/example/example-response.json",
+  "chars": 85,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/example-response.json.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/cloudflare-mock/example/worker.js",
+  "chars": 1784,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/worker.js.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/cloudflare-mock/example/wrangler.toml",
+  "chars": 52,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/wrangler.toml.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/example-scenarios.md",
+  "chars": 6991,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/example-scenarios.md.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/sources/documents/2025-08-14-cards-faq.md",
+  "chars": 4837,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/2025-08-14-cards-faq.md.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/sources/documents/2026-09-10-ivr-prompt-sheet.md",
+  "chars": 7833,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/2026-09-10-ivr-prompt-sheet.md.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/sources/documents/2026-10-01-service-contract.md",
+  "chars": 19570,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/2026-10-01-service-contract.md.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/sources/emails/2026-09-24-kickoff-questions.txt",
+  "chars": 8037,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/2026-09-24-kickoff-questions.txt.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/sources/emails/2026-10-09-decisions-recap.txt",
+  "chars": 3963,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/2026-10-09-decisions-recap.txt.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/sources/emails/attachments/2026-09-02-statement-debt-analysis.md",
+  "chars": 15844,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/2026-09-02-statement-debt-analysis.md.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/sources/emails/attachments/2026-10-08-statement-debt-analysis.md",
+  "chars": 28068,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/2026-10-08-statement-debt-analysis.md.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/sources/meetings/2026-10-07-analysis-session-transcript.txt",
+  "chars": 31350,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/2026-10-07-analysis-session-transcript.txt.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/statement-debt-call-flow.pdf",
+  "chars": 6667,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/statement-debt-call-flow.pdf.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/test-environment/test-customers.json",
+  "chars": 706815,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/test-customers.json.txt"
+ },
+ {
+  "file": "/Users/ahmetkumas/Desktop/freya-a/Build the Builder - Final Case/test-environment/test-customers.md",
+  "chars": 7534,
+  "text": "/Users/ahmetkumas/Desktop/freya-a/kit/build-the-builder/work/final/text/test-customers.md.txt"
+ }
+]

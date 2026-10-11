@@ -1,6 +1,6 @@
 """Write submission.json after a final build.
 
-    python3 builder/make_submission.py <slot> <mock_url> --team NAME --members "A,B" [--case CASE_FOLDER]
+    python3 builder/make_submission.py <slot> <mock_url> --team NAME --members "Name <email>, Name <email>"
 
 Fills repo and commit from git, the workflow export and the newest trace of that slot.
 """
@@ -20,10 +20,11 @@ traces = sorted(glob.glob(str(KIT / "traces" / f"{a.slot}-*.log")), key=os.path.
 final_log = KIT / "traces" / "final.log"
 sub = {
     "team": a.team,
-    "members": [m.strip() for m in a.members.split(",") if m.strip()],
+    "members": [{"name": m.split("<")[0].strip(), "email": m.split("<")[1].rstrip(">").strip() if "<" in m else ""}
+                for m in a.members.split(",") if m.strip()],
     "repo": repo,
     "commit": git("rev-parse", "HEAD"),
-    "run_command": f"python3 builder/build.py {a.case} {a.mock_url} 2>&1 | tee traces/final.log",
+    "run_command": "python3 builder/build.py {case_folder} {mock_url} --slot final --deploy-mock",
     "workflow": f"submissions/{a.slot}.workflow.json",
     "trace": "traces/final.log" if final_log.exists() else (os.path.relpath(traces[-1], KIT) if traces else ""),
     "mock_url": a.mock_url,

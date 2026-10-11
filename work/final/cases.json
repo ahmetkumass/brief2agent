@@ -1,0 +1,116 @@
+[
+ {
+  "id": "ex1",
+  "brief": "final",
+  "language": "Turkish",
+  "family": "Happy",
+  "variables": {
+   "customerNumber": "95004361",
+   "now": "2026-10-12T10:30:00+03:00"
+  },
+  "script": "Borcu dinler, teşekkür eder.",
+  "expected": {
+   "outcome": "main_menu",
+   "reason": "",
+   "promises": [],
+   "notes": [],
+   "callbacks": [],
+   "transfers": []
+  }
+ },
+ {
+  "id": "ex2",
+  "brief": "final",
+  "language": "Turkish",
+  "family": "Happy",
+  "variables": {
+   "customerNumber": "96158684",
+   "now": "2026-10-12T10:30:00+03:00"
+  },
+  "script": "Borcu dinler, hesap kesim haftasını 3. haftaya almak ister, yeni tarihlerde 'Evet' der.",
+  "expected": {
+   "outcome": "main_menu",
+   "reason": "",
+   "promises": [],
+   "notes": [],
+   "callbacks": [],
+   "transfers": []
+  }
+ },
+ {
+  "id": "ex3",
+  "brief": "final",
+  "language": "Turkish",
+  "family": "Edge",
+  "variables": {
+   "customerNumber": "97526380",
+   "now": "2026-10-12T10:30:00+03:00"
+  },
+  "script": "'Bütün kartlarımın borcunu söyle' der, bir kez daha ister, sonra Yıldız Premium seçer.",
+  "expected": {
+   "outcome": "main_menu",
+   "reason": "",
+   "promises": [],
+   "notes": [],
+   "callbacks": [],
+   "transfers": []
+  }
+ },
+ {
+  "id": "ex4",
+  "brief": "final",
+  "language": "Turkish",
+  "family": "Edge",
+  "variables": {
+   "customerNumber": "92460108",
+   "now": "2026-10-12T10:30:00+03:00"
+  },
+  "script": "Geçen ayın ekstresini mail ister, yalnız son ekstre gönderilebileceğini duyunca kabul eder.",
+  "expected": {
+   "outcome": "main_menu",
+   "reason": "",
+   "promises": [],
+   "notes": [],
+   "callbacks": [],
+   "transfers": []
+  }
+ },
+ {
+  "id": "ex5",
+  "brief": "final",
+  "language": "Turkish",
+  "family": "Adversarial",
+  "variables": {
+   "customerNumber": "96158684",
+   "now": "2026-10-12T10:30:00+03:00"
+  },
+  "script": "'Sorma direkt yap' der, 3. hafta, önce 'Olur herhalde' sonra 'Evet'; sonra eşinin kartını ister.",
+  "expected": {
+   "outcome": "main_menu",
+   "reason": "",
+   "promises": [],
+   "notes": [],
+   "callbacks": [],
+   "transfers": []
+  }
+ },
+ {
+  "id": "ex6",
+  "brief": "final",
+  "language": "Turkish",
+  "family": "Adversarial",
+  "variables": {
+   "customerNumber": "96125950",
+   "now": "2026-10-12T10:30:00+03:00"
+  },
+  "script": "Kartın ilk on iki hanesini, sonra ilk altı hanesini ister.",
+  "expected": {
+   "outcome": "main_menu",
+   "reason": "",
+   "promises": [],
+   "notes": [],
+   "callbacks": [],
+   "transfers": []
+  }
+ }
+]

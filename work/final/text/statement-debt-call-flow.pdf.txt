@@ -1,0 +1,211 @@
+                                       Call arrives from IVR
+
+
+
+
+                                    Supervisor detects intent
+                               hands off to statement debt assistant
+
+
+
+
+                                             Second factor
+                                               needed?
+
+
+
+                                          yes
+
+
+                   Back to IVR for second factor
+                                                           no
+                    then return to the assistant
+
+
+
+
+                                         Card list service
+
+
+
+
+                                                Eligible
+                                                cards?
+
+
+
+                                                none                  yes
+
+
+
+                                 Return to supervisor                       How many?
+
+
+                                                                        more than 1
+
+
+                                          Name the customer's cards
+                                               ask which one
+
+
+
+
+                                                       Same card
+                                                        name?
+
+
+
+                                                       yes
+
+
+
+                                       Ask last 4 digits                                            1
+
+
+
+
+                                       Same last
+                                                                             no
+                                        4 digits?
+
+
+
+                                       yes
+
+
+
+             yes         Ask last 6 digits                      no
+
+
+
+
+                                                             Card selected
+
+
+
+
+                                                                Statement
+                                                                  debt?
+
+
+
+                                                        none                       yes
+
+
+                            Say there is no statement debt                 Read last 4 digits, card name,
+                                   read total debt                            cut-off and due date
+
+
+
+
+                   Another
+                                                                                         TL debt?
+                    card?
+
+
+
+                       no                                                          yes          no
+
+
+
+                                                                 TL payment
+            Return to supervisor
+                                                                    status
+
+
+
+
+                                      none paid              min or more          below min         No TL debt
+
+
+
+   TL: not paid              TL: minimum or more paid                 TL: below minimum paid
+debt and minimum              remaining debt, thanks                 debt, minimum, remaining
+
+
+
+
+                                                        USD / EUR
+                                                          debt?
+
+
+
+
+                                                Read USD / EUR debt
+                                                 or say there is none
+
+
+
+
+                                                    Read due date
+
+
+
+
+                                               Offer: change cut-off date
+                                                or e-mail the statement
+
+
+
+
+                                                        Customer
+                                                         answer
+
+
+
+                                    nothing else        pay debt             e-mail                       cut-off date
+
+
+
+                                                                                  Registered                                       Shared
+Return to supervisor               IVR: transfer to agent
+                                                                                   e-mail?                                       statement?
+
+
+
+                                                                           yes                                                           yes           no
+
+
+
+                                                                                                                                   Primary or
+                                       Read the registered address
+                                                                                                                                 linked card?
+
+
+
+
+                                                                                          no                                    linked                primary      Read the card's cut-off week
+
+
+
+
+                                                 Send to this                                           Read linked and primary card           Read primary and linked card
+                                                  address?                                               cut-off week and next dates            cut-off week and next dates
+
+
+                                                 yes                        no
+
+
+
+                             Send statement by e-mail                Say there is no suitable address                                                    Change it?
+
+
+                                                                                                                                                                       yes
+
+
+                                                                                                                                                                  Offer the other weeks
+                                                Return to supervisor
+                                                                                                                                                                   customer picks one
+
+
+                                                                                                                                                            no
+
+
+                                                                                                                                                                 Read the new week and dates
+                                                                                                                                                                       get confirmation
+
+
+
+
+                                                                                                                                               Return to supervisor
+
